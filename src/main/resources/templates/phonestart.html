@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WikiQuiz</title>
+    <script>
+        let name = window.prompt("name?", "Michael");
+
+        fetch("http://" + location.host + "/phone/{quizid}/register", {
+            method: 'post',
+            body: name
+        }).then(function (response) {
+            return response.text();
+        }).then(function (text) {
+            window.location.replace("http://" + location.host + "/phone/{quizid}/" + text);
+        });
+
+    </script>
+</head>
+<body>
+</body>
+</html>

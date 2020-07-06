@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WikiQuiz</title>
+    <style>
+        .question {
+            font-size: 2em;
+        }
+
+        .answerButton {
+            display: block;
+        }
+    </style>
+    <script>
+        window.socket = new WebSocket("ws://" + location.host + "/socket/phone/{quizid}/{personid}");
+
+        socket.onopen = function () {
+            console.log("Connected to the web socket");
+        };
+        socket.onmessage = function (m) {
+            console.log("Got message: " + m.data);
+            let message = JSON.parse(m.data);
+            if (message.type === "question") {
+                document.getElementById("question").innerText = message.question;
+                document.getElementById("buttons").innerHTML = "";
+                let code = 97;
+                for (const answer of message.answers) {
+                    let buttonEle = document.createElement("button");
+                    buttonEle.classList.add("answerButton");
+                    buttonEle.innerHTML = String.fromCharCode(code) + ": " + answer;
+                    buttonEle.onclick = function () {
+                        quizClick(answer);
+                    }
+                    document.getElementById("buttons").appendChild(buttonEle);
+                    code++;
+                }
+            } else if (message.type === "answer") {
+
+            } else if (message.type === "results") {
+                //Display results
+            }
+        };
+
+        function quizClick(answer) {
+            window.socket.send(answer);
+        }
+
+    </script>
+</head>
+<body>
+<div id="question"></div>
+<div id="buttons">
+
+</div>
+</body>
+</html>

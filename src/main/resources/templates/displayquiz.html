@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WikiQuiz</title>
+    <style>
+        .question {
+            font-size: 2em;
+        }
+
+        .answer.correct {
+            color: darkgreen;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .results {
+        }
+
+        .scores {
+            font-size: 2em;
+        }
+    </style>
+    <script>
+        let socket = new WebSocket("ws://" + location.host + "/socket/display/{quizid}");
+        let nextEvent;
+
+        socket.onopen = function () {
+            console.log("Connected to the web socket");
+        };
+        socket.onmessage = function (m) {
+            console.log("Got message: " + m.data);
+            let message = JSON.parse(m.data);
+            if (message.type === "question") {
+                clearTimeout(nextEvent);
+                document.getElementById("question").innerText = message.question;
+                document.getElementById("answers").innerHTML = "";
+                for (const element of message.answers) {
+                    let answerEle = document.createElement("div");
+                    answerEle.classList.add("answer");
+                    answerEle.innerHTML = element;
+                    document.getElementById("answers").appendChild(answerEle);
+                }
+                nextEvent = setTimeout(function () {
+                    socket.send("questionfinished")
+                }, 10000);
+            } else if (message.type === "answer") {
+                clearTimeout(nextEvent);
+                for (const element of document.getElementById("answers").children) {
+                    if (element.innerHTML === message.answer) {
+                        element.classList.add("correct");
+                    }
+                }
+                nextEvent = setTimeout(function () {
+                    socket.send("nextquestion")
+                }, 3000);
+            } else if (message.type === "results") {
+                clearTimeout(nextEvent);
+                document.getElementById("question").innerHTML = "";
+                document.getElementById("answers").innerHTML = "";
+                for (const score of message.scores) {
+                    let nameEle = document.createElement("span");
+                    nameEle.classList.add("name");
+                    nameEle.innerText = score.name;
+                    let valEle = document.createElement("span");
+                    valEle.innerText = score.score;
+                    valEle.classList.add("value");
+
+                    let scoreEle = document.createElement("div");
+                    scoreEle.classList.add("score");
+                    scoreEle.appendChild(nameEle);
+                    scoreEle.appendChild(valEle);
+                    document.getElementById("scores").appendChild(scoreEle);
+                }
+                document.getElementById("results").style.display = "";
+            }
+        };
+
+    </script>
+</head>
+<body>
+<div class="question" id="question"></div>
+<div id="answers">
+
+</div>
+<div class="results" id="results" style="display: none;">
+    <h1>Results</h1>
+    <div class="scores" id="scores">
+
+    </div>
+    <a href="/">Back to home</a>
+</div>
+</body>
+</html>
