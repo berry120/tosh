@@ -12,6 +12,7 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +31,7 @@ public class PhoneSocket {
     }
 
     public void sendObject(String quizid, ClientObject obj) {
-        sessions.get(quizid).forEach(session ->
+        sessions.getOrDefault(quizid, Collections.emptyList()).forEach(session ->
                 session.getAsyncRemote().sendObject(obj, result -> {
                     System.out.println("Sent ok: " + result.isOK());
                     if (!result.isOK()) result.getException().printStackTrace();
@@ -39,7 +40,7 @@ public class PhoneSocket {
     }
 
     public void close(String quizid) {
-        sessions.get(quizid).forEach(session -> {
+        sessions.getOrDefault(quizid, Collections.emptyList()).forEach(session -> {
                     try {
                         session.close();
                     } catch (IOException e) {

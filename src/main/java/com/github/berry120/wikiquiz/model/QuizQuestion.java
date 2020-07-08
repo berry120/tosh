@@ -5,11 +5,13 @@ import com.github.berry120.wikiquiz.model.client.ClientObject;
 import com.github.berry120.wikiquiz.model.client.ClientQuestion;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class QuizQuestion {
 

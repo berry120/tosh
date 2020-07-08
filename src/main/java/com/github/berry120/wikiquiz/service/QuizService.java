@@ -8,9 +8,7 @@ import com.github.berry120.wikiquiz.socket.PhoneSocket;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @ApplicationScoped
 public class QuizService {
@@ -18,14 +16,14 @@ public class QuizService {
     private final QuizIdGenerator idGenerator;
     private final DisplaySocket displaySocket;
     private final PhoneSocket phoneSocket;
-    private final Map<String, QuizState> quizStates;
+    private final QuizState quizState;
 
     @Inject
-    QuizService(QuizIdGenerator idGenerator, DisplaySocket displaySocket, PhoneSocket phoneSocket) {
+    QuizService(QuizIdGenerator idGenerator, QuizState quizState, DisplaySocket displaySocket, PhoneSocket phoneSocket) {
         this.idGenerator = idGenerator;
+        this.quizState = quizState;
         this.displaySocket = displaySocket;
         this.phoneSocket = phoneSocket;
-        quizStates = new HashMap<>();
     }
 
     public String createQuiz() {
@@ -36,41 +34,40 @@ public class QuizService {
         questions.add(new QuizQuestion("Horse is correct?", "Horse", List.of("Cat", "Dog", "Hen")));
 
         Quiz quiz = new Quiz(idGenerator.generateRandomId(), questions);
-        quizStates.put(quiz.getId(), new QuizState(idGenerator, quiz));
+        quizState.addQuiz(quiz);
         return quiz.getId();
     }
 
     public void startQuiz(String quizId) {
-        if (!quizStates.get(quizId).isStarted()) {
+        if (!quizState.isStarted(quizId)) {
             nextQuestion(quizId);
         }
     }
 
     public void addQuizAnswer(String quizId, String personId, String answer) {
-        quizStates.get(quizId).addAnswer(personId, answer);
-        if (quizStates.get(quizId).hasEveryoneAnswered()) {
+        quizState.addAnswer(quizId, personId, answer);
+        if (quizState.hasEveryoneAnswered(quizId)) {
             questionFinished(quizId);
         }
     }
 
     public void nextQuestion(String quizId) {
-        if (quizStates.get(quizId).isFinished()) {
-            displaySocket.sendObject(quizId, quizStates.get(quizId).getResults().toClientResults());
-            phoneSocket.sendObject(quizId, quizStates.get(quizId).getResults().toClientResults());
+        if (quizState.isFinished(quizId)) {
+            displaySocket.sendObject(quizId, quizState.getResults(quizId).toClientResults());
+            phoneSocket.sendObject(quizId, quizState.getResults(quizId).toClientResults());
         } else {
-            quizStates.get(quizId).nextQuestion();
-            displaySocket.sendObject(quizId, quizStates.get(quizId).getCurrentQuestion().toClientQuestion());
-            phoneSocket.sendObject(quizId, quizStates.get(quizId).getCurrentQuestion().toClientQuestion());
+            quizState.advanceQuestion(quizId);
+            displaySocket.sendObject(quizId, quizState.getCurrentQuestion(quizId).toClientQuestion());
+            phoneSocket.sendObject(quizId, quizState.getCurrentQuestion(quizId).toClientQuestion());
         }
     }
 
     public void questionFinished(String quizId) {
-        displaySocket.sendObject(quizId, quizStates.get(quizId).getCurrentQuestion().toClientAnswer());
+        displaySocket.sendObject(quizId, quizState.getCurrentQuestion(quizId).toClientAnswer());
     }
 
     public String addPersonToQuiz(String quizId, String name) {
-        System.out.println(quizStates);
-        return quizStates.get(quizId).addPlayer(name);
+        return quizState.addPlayer(quizId, name);
     }
 
 }

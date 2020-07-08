@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Person {
+public class MarkedAnswer {
 
-    private String name;
-    private String id;
-
+    private QuizAnswer answer;
+    private boolean correct;
 }
