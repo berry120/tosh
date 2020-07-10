@@ -5,9 +5,8 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class PersonScore {
+public class ClientScore {
 
     private String name;
-    private long score;
-
+    private int score;
 }

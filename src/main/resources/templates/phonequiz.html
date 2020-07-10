@@ -21,7 +21,14 @@
         socket.onmessage = function (m) {
             console.log("Got message: " + m.data);
             let message = JSON.parse(m.data);
-            if (message.type === "question") {
+            if (message.type === "fake_answer_request") {
+                let fakeAnswer = "fake answer from {personid}";
+                // let fakeAnswer = prompt(message.question);
+                window.socket.send(JSON.stringify({
+                    type: "fakeanswer",
+                    answer: fakeAnswer
+                }));
+            } else if (message.type === "question") {
                 document.getElementById("question").innerText = message.question;
                 document.getElementById("buttons").innerHTML = "";
                 let code = 97;
@@ -36,14 +43,17 @@
                     code++;
                 }
             } else if (message.type === "answer") {
-
+                //Do nothing
             } else if (message.type === "results") {
-                //Display results
+                //Quiz is over
             }
         };
 
         function quizClick(answer) {
-            window.socket.send(answer);
+            window.socket.send(JSON.stringify({
+                type: "answer",
+                answer: answer
+            }));
         }
 
     </script>

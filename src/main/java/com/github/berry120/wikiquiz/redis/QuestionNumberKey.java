@@ -3,13 +3,13 @@ package com.github.berry120.wikiquiz.redis;
 import lombok.Data;
 
 @Data
-public class QuestionPositionKey implements RedisKey {
+public class QuestionNumberKey implements RedisKey {
 
     private String type;
     private String quizId;
 
-    public QuestionPositionKey(String quizId) {
-        this.type = "question_position";
+    public QuestionNumberKey(String quizId) {
+        this.type = "questionnumber";
         this.quizId = quizId;
     }
 }

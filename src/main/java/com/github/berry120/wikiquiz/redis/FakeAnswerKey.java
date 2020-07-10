@@ -3,14 +3,14 @@ package com.github.berry120.wikiquiz.redis;
 import lombok.Data;
 
 @Data
-public class AnswerKey implements RedisKey {
+public class FakeAnswerKey implements RedisKey {
 
     private String type;
     private String quizId;
     private String playerId;
 
-    public AnswerKey(String quizId, String playerId) {
-        this.type = "answer";
+    public FakeAnswerKey(String quizId, String playerId) {
+        this.type = "fakeanswer";
         this.quizId = quizId;
         this.playerId = playerId;
     }

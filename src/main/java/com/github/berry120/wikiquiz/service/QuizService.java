@@ -3,23 +3,29 @@ package com.github.berry120.wikiquiz.service;
 import com.github.berry120.wikiquiz.model.Quiz;
 import com.github.berry120.wikiquiz.model.QuizQuestion;
 import com.github.berry120.wikiquiz.model.QuizState;
+import com.github.berry120.wikiquiz.model.client.ClientAnswer;
+import com.github.berry120.wikiquiz.model.client.ClientFakeAnswerRequest;
+import com.github.berry120.wikiquiz.model.client.ClientQuestion;
+import com.github.berry120.wikiquiz.model.client.ClientResult;
+import com.github.berry120.wikiquiz.model.client.ClientScore;
 import com.github.berry120.wikiquiz.socket.DisplaySocket;
 import com.github.berry120.wikiquiz.socket.PhoneSocket;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class QuizService {
 
-    private final QuizIdGenerator idGenerator;
+    private final RandomIdGenerator idGenerator;
     private final DisplaySocket displaySocket;
     private final PhoneSocket phoneSocket;
     private final QuizState quizState;
 
     @Inject
-    QuizService(QuizIdGenerator idGenerator, QuizState quizState, DisplaySocket displaySocket, PhoneSocket phoneSocket) {
+    QuizService(RandomIdGenerator idGenerator, QuizState quizState, DisplaySocket displaySocket, PhoneSocket phoneSocket) {
         this.idGenerator = idGenerator;
         this.quizState = quizState;
         this.displaySocket = displaySocket;
@@ -28,46 +34,98 @@ public class QuizService {
 
     public String createQuiz() {
         List<QuizQuestion> questions = new ArrayList<>();
-        questions.add(new QuizQuestion("Cat is correct?", "Cat", List.of("Dog", "Hen", "Horse")));
-        questions.add(new QuizQuestion("Dog is correct?", "Dog", List.of("Cat", "Hen", "Horse")));
-        questions.add(new QuizQuestion("Hen is correct?", "Hen", List.of("Cat", "Dog", "Horse")));
-        questions.add(new QuizQuestion("Horse is correct?", "Horse", List.of("Cat", "Dog", "Hen")));
+        questions.add(new QuizQuestion("Cat is correct?", "Cat"));
+        questions.add(new QuizQuestion("Dog is correct?", "Dog"));
+        questions.add(new QuizQuestion("Hen is correct?", "Hen"));
+        questions.add(new QuizQuestion("Horse is correct?", "Horse"));
 
         Quiz quiz = new Quiz(idGenerator.generateRandomId(), questions);
-        quizState.addQuiz(quiz);
+        quizState.createQuiz(quiz);
         return quiz.getId();
     }
 
     public void startQuiz(String quizId) {
-        if (!quizState.isStarted(quizId)) {
-            nextQuestion(quizId);
+        nextQuestionOrFinish(quizId);
+    }
+
+    public Quiz getQuiz(String quizId) {
+        return quizState.getQuiz(quizId);
+    }
+
+    public void addFakeAnswer(String quizId, String playerId, String fakeAnswer) {
+        quizState.storeFakeAnswer(quizId, playerId, fakeAnswer);
+        if (quizState.haveAllFakeAnswers(quizId)) {
+            sendQuestionStage(quizId);
         }
     }
 
-    public void addQuizAnswer(String quizId, String personId, String answer) {
-        quizState.addAnswer(quizId, personId, answer);
-        if (quizState.hasEveryoneAnswered(quizId)) {
-            questionFinished(quizId);
+    public void addAnswer(String quizId, String playerId, String answer) {
+        quizState.storeAnswer(quizId, playerId, answer);
+        if (quizState.haveAllAnswers(quizId)) {
+            sendResultsStage(quizId);
         }
     }
 
-    public void nextQuestion(String quizId) {
-        if (quizState.isFinished(quizId)) {
-            displaySocket.sendObject(quizId, quizState.getResults(quizId).toClientResults());
-            phoneSocket.sendObject(quizId, quizState.getResults(quizId).toClientResults());
+    public void nextQuestionOrFinish(String quizId) {
+        int questionNumber = quizState.getQuestionNumber(quizId);
+        if (questionNumber + 1 >= quizState.getQuiz(quizId).getQuestions().size()) {
+            sendFinalScoreStage(quizId);
         } else {
-            quizState.advanceQuestion(quizId);
-            displaySocket.sendObject(quizId, quizState.getCurrentQuestion(quizId).toClientQuestion());
-            phoneSocket.sendObject(quizId, quizState.getCurrentQuestion(quizId).toClientQuestion());
+            sendFakeQuestionStage(quizId);
         }
     }
 
-    public void questionFinished(String quizId) {
-        displaySocket.sendObject(quizId, quizState.getCurrentQuestion(quizId).toClientAnswer());
+    private void sendFakeQuestionStage(String quizId) {
+        quizState.removeExistingAnswers(quizId);
+        int questionNumber = quizState.getQuestionNumber(quizId) + 1;
+        quizState.setQuestionNumber(quizId, questionNumber);
+
+        Quiz quiz = quizState.getQuiz(quizId);
+        String questionText = quiz.getQuestions().get(questionNumber).getQuestion();
+        ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(questionText, questionNumber);
+
+        displaySocket.sendObject(quizId, clientFakeAnswerRequest);
+        phoneSocket.sendObject(quizId, clientFakeAnswerRequest);
     }
 
-    public String addPersonToQuiz(String quizId, String name) {
-        return quizState.addPlayer(quizId, name);
+    public void sendQuestionStage(String quizId) {
+        Quiz quiz = quizState.getQuiz(quizId);
+        QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber(quizId));
+        List<String> questionOptions = new ArrayList<>(quizState.getFakeAnswers(quizId).values());
+        questionOptions.add(question.getCorrectAnswer());
+
+        ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), questionOptions);
+
+        displaySocket.sendObject(quizId, clientQuestion);
+        phoneSocket.sendObject(quizId, clientQuestion);
+    }
+
+    public void sendResultsStage(String quizId) {
+        quizState.updateScores(quizId);
+
+        QuizQuestion question = quizState.getQuiz(quizId).getQuestions().get(quizState.getQuestionNumber(quizId));
+
+        ClientAnswer clientAnswer = new ClientAnswer(question.getCorrectAnswer(),
+                quizState.getAnswers(quizId),
+                quizState.getFakeAnswers(quizId),
+                quizState.getScores(quizId));
+
+        displaySocket.sendObject(quizId, clientAnswer);
+        phoneSocket.sendObject(quizId, clientAnswer);
+    }
+
+    private void sendFinalScoreStage(String quizId) {
+        ClientResult clientResult = new ClientResult(quizState.getScores(quizId)
+                .entrySet().stream()
+                .map(e -> new ClientScore(e.getKey().getName(), e.getValue()))
+                .collect(Collectors.toList()));
+
+        displaySocket.sendObject(quizId, clientResult);
+        phoneSocket.sendObject(quizId, clientResult);
+    }
+
+    public String addPlayer(String quizId, String playerName) {
+        return quizState.addPlayer(quizId, playerName);
     }
 
 }

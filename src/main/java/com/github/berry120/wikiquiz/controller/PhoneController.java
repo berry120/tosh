@@ -1,5 +1,7 @@
 package com.github.berry120.wikiquiz.controller;
 
+import com.github.berry120.wikiquiz.model.PlayerParameters;
+import com.github.berry120.wikiquiz.model.QuizQuestion;
 import com.github.berry120.wikiquiz.service.QuizService;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
@@ -11,6 +13,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.stream.Collectors;
 
 @Path("/phone")
 public class PhoneController {
@@ -31,7 +34,9 @@ public class PhoneController {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance phoneStart(@PathParam String quizId) {
         return phonestart
-                .data("quizid", quizId);
+                .data("quizid", quizId)
+                .data("questions", quizService.getQuiz(quizId).getQuestions().stream()
+                        .map(QuizQuestion::getQuestion).collect(Collectors.toList()));
     }
 
     @GET
@@ -45,10 +50,10 @@ public class PhoneController {
 
     @POST
     @Path("/{quizId}/register")
-    @Consumes(MediaType.TEXT_PLAIN)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String registerPerson(@PathParam String quizId, String name) {
-        return quizService.addPersonToQuiz(quizId, name);
+    public String registerPerson(@PathParam String quizId, PlayerParameters playerParameters) {
+        return quizService.addPlayer(quizId, playerParameters.getPlayerName());
     }
 
 }

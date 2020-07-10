@@ -4,11 +4,11 @@ import javax.enterprise.context.ApplicationScoped;
 import java.util.Random;
 
 @ApplicationScoped
-public class QuizIdGenerator {
+public class RandomIdGenerator {
 
     private final Random random;
 
-    public QuizIdGenerator() {
+    public RandomIdGenerator() {
         random = new Random();
     }
 

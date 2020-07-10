@@ -6,13 +6,20 @@
     <script>
         let name = window.prompt("name?", "Michael");
 
+        let registry = {};
+        registry.playerName = name;
+
         fetch("http://" + location.host + "/phone/{quizid}/register", {
             method: 'post',
-            body: name
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(registry)
         }).then(function (response) {
             return response.text();
         }).then(function (text) {
-            window.location.replace("http://" + location.host + "/phone/{quizid}/" + text);
+            window.location.href = "http://" + location.host + "/phone/{quizid}/" + text;
         });
 
     </script>

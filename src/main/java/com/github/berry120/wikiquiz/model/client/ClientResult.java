@@ -7,9 +7,9 @@ import java.util.List;
 public class ClientResult implements ClientObject {
 
     private String type;
-    private List<PersonScore> scores;
+    private List<ClientScore> scores;
 
-    public ClientResult(List<PersonScore> scores) {
+    public ClientResult(List<ClientScore> scores) {
         type = "results";
         this.scores = scores;
     }

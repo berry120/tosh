@@ -11,7 +11,7 @@
         .answer.correct {
             color: darkgreen;
             font-weight: bold;
-            font-size: 1.2em;
+            font-size: 1.3em;
         }
 
         .results {
@@ -29,14 +29,43 @@
         let socket = new WebSocket("ws://" + location.host + "/socket/display/{quizid}");
         let nextEvent;
 
-        socket.onopen = function () {
-            console.log("Connected to the web socket");
-        };
+        function setFakeAnswersTimeout() {
+            sendAfterTimeout({
+                type: "fakeanswerfinished",
+            }, 10000);
+        }
+
+        function setAnswerQuestionTimeout() {
+            sendAfterTimeout({
+                type: "questionfinished",
+            }, 10000);
+        }
+
+        function setDisplayAnswerTimeout() {
+            sendAfterTimeout({
+                type: "displayanswerfinished",
+            }, 3000);
+        }
+
+        function sendAfterTimeout(toSend, timeout) {
+            nextEvent = setTimeout(function () {
+                socket.send(JSON.stringify(toSend));
+            }, timeout);
+        }
+
         socket.onmessage = function (m) {
             console.log("Got message: " + m.data);
+            clearTimeout(nextEvent);
+
             let message = JSON.parse(m.data);
-            if (message.type === "question") {
-                clearTimeout(nextEvent);
+            if (message.type === "fake_answer_request") {
+                currentQuestionNumber = message.questionNumber;
+                document.getElementById("question").innerText = "";
+                document.getElementById("answers").innerHTML = "";
+                document.getElementById("fakeanswertime").style.display = "";
+                setFakeAnswersTimeout();
+            } else if (message.type === "question") {
+                document.getElementById("fakeanswertime").style.display = "none";
                 document.getElementById("question").innerText = message.question;
                 document.getElementById("answers").innerHTML = "";
                 for (const element of message.answers) {
@@ -45,23 +74,18 @@
                     answerEle.innerHTML = element;
                     document.getElementById("answers").appendChild(answerEle);
                 }
-                nextEvent = setTimeout(function () {
-                    socket.send("questionfinished")
-                }, 10000);
+                setAnswerQuestionTimeout();
             } else if (message.type === "answer") {
-                clearTimeout(nextEvent);
                 for (const element of document.getElementById("answers").children) {
-                    if (element.innerHTML === message.answer) {
+                    if (element.innerHTML === message.correctAnswer) {
                         element.classList.add("correct");
                     }
                 }
-                nextEvent = setTimeout(function () {
-                    socket.send("nextquestion")
-                }, 3000);
+                setDisplayAnswerTimeout();
             } else if (message.type === "results") {
-                clearTimeout(nextEvent);
                 document.getElementById("question").innerHTML = "";
                 document.getElementById("answers").innerHTML = "";
+
                 for (const score of message.scores) {
                     let nameEle = document.createElement("span");
                     nameEle.classList.add("name");
@@ -83,6 +107,10 @@
     </script>
 </head>
 <body>
+<div class="fakeanswertime" id="fakeanswertime" style="display: none;">
+    Enter your fake answers now!
+</div>
+
 <div class="question" id="question"></div>
 <div id="answers">
 

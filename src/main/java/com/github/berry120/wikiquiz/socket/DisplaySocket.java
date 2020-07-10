@@ -1,5 +1,6 @@
 package com.github.berry120.wikiquiz.socket;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.model.client.ClientObject;
 import com.github.berry120.wikiquiz.service.QuizService;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
@@ -20,11 +21,13 @@ public class DisplaySocket {
 
     private final QuizService quizService;
     private final Map<String, Session> sessions;
+    private final ObjectMapper objectMapper;
 
     @Inject
     public DisplaySocket(QuizService quizService) {
         this.quizService = quizService;
         sessions = new ConcurrentHashMap<>();
+        objectMapper = new ObjectMapper();
     }
 
     public void sendObject(String quizid, ClientObject obj) {
@@ -49,14 +52,24 @@ public class DisplaySocket {
     }
 
     @OnMessage
-    public void onMessage(String message, @PathParam("quizid") String quizid) {
-        switch (message) {
-            case "questionfinished":
-                quizService.questionFinished(quizid);
-                break;
-            case "nextquestion":
-                quizService.nextQuestion(quizid);
-                break;
+    public void onMessage(String rawMessage, @PathParam("quizid") String quizid) {
+        try {
+            DisplaySocketMessage message = objectMapper.readValue(rawMessage, DisplaySocketMessage.class);
+            System.out.println(quizid + " - " + message);
+
+            switch (message.getType()) {
+                case "questionfinished":
+                    quizService.sendResultsStage(quizid);
+                    break;
+                case "displayanswerfinished":
+                    quizService.nextQuestionOrFinish(quizid);
+                    break;
+                case "fakeanswerfinished":
+                    quizService.sendQuestionStage(quizid);
+                    break;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 

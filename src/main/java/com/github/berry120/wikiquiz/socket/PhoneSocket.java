@@ -1,5 +1,6 @@
 package com.github.berry120.wikiquiz.socket;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.model.client.ClientObject;
 import com.github.berry120.wikiquiz.service.QuizService;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
@@ -23,11 +24,13 @@ public class PhoneSocket {
 
     private final QuizService quizService;
     private final Map<String, List<Session>> sessions;
+    private final ObjectMapper objectMapper;
 
     @Inject
     public PhoneSocket(QuizService quizService) {
         this.quizService = quizService;
         sessions = new ConcurrentHashMap<>();
+        objectMapper = new ObjectMapper();
     }
 
     public void sendObject(String quizid, ClientObject obj) {
@@ -58,9 +61,20 @@ public class PhoneSocket {
     }
 
     @OnMessage
-    public void onMessage(String message, @PathParam("quizid") String quizid, @PathParam("personid") String personid) {
-        quizService.addQuizAnswer(quizid, personid, message);
-        System.out.println(quizid + " - " + personid + message);
+    public void onMessage(String rawMessage, @PathParam("quizid") String quizid, @PathParam("personid") String personid) {
+        try {
+            PhoneSocketMessage message = objectMapper.readValue(rawMessage, PhoneSocketMessage.class);
+            System.out.println(quizid + " - " + personid + " - " + message);
+            if (message.getType().equals("fakeanswer")) {
+                quizService.addFakeAnswer(quizid, personid, message.getAnswer());
+            } else if (message.getType().equals("answer")) {
+                quizService.addAnswer(quizid, personid, message.getAnswer());
+            } else {
+                throw new RuntimeException("Unknown type");
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
 }

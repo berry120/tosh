@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class QuizAnswer {
 
-    private String personId;
+    private String playerId;
     private String answer;
     private boolean correct;
 
