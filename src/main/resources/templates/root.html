@@ -3,9 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <title>WikiQuiz</title>
+    <link href="/style.css" rel="stylesheet" type="text/css">
+    <link href="/root.css" rel="stylesheet" type="text/css">
+    <script>
+        let socket = new WebSocket("ws://" + location.host + "/socket/{quizid}");
+
+        socket.onmessage = function (m) {
+            console.log("Got message: " + m.data);
+
+            let message = JSON.parse(m.data);
+            if (message.type === "player_joined") {
+                document.getElementById("game-expl").style.display = "none";
+
+                let playerEle = document.createElement("span");
+                playerEle.innerText = message.playerName;
+                playerEle.classList.add("player");
+                document.getElementById("players").appendChild(playerEle);
+
+                if (document.getElementById("players").childElementCount >= 2) {
+                    document.getElementById("want-in").style.display = "none";
+                    document.getElementById("start-link").style.display = "";
+                }
+            }
+        };
+
+    </script>
 </head>
 <body>
-<div>Go <a href="/phone/{quizid}">here</a> on your phones.</div>
-<div>...then when you're done click <a href="/display/{quizid}">here</a> to start the quiz.</div>
+<h1>Tosh</h1>
+<div class="game-expl" id="game-expl">
+    <p>Tosh is a game similar to Balderdash, Fibbage, Fictionary and others.</p>
+    <p>Fool your opponents by providing wrong answers for them to guess!</p>
+</div>
+<div class="players" id="players">
+</div>
+<div class="want-in" id="want-in">Want in? Just scan.</div>
+<div class="start-link" id="start-link" style="display: none;"><a href="/display/{quizid}">Everyone's ready</a></div>
+<div class="dev-only">(Dev only) <a href="/phone/{quizid}">Phone link</a></div>
+<div class="qrcontainer"><img src="/qrcode/{quizid}"></div>
 </body>
 </html>

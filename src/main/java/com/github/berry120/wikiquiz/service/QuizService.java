@@ -5,11 +5,13 @@ import com.github.berry120.wikiquiz.model.QuizQuestion;
 import com.github.berry120.wikiquiz.model.QuizState;
 import com.github.berry120.wikiquiz.model.client.ClientAnswer;
 import com.github.berry120.wikiquiz.model.client.ClientFakeAnswerRequest;
+import com.github.berry120.wikiquiz.model.client.ClientPlayerJoined;
 import com.github.berry120.wikiquiz.model.client.ClientQuestion;
 import com.github.berry120.wikiquiz.model.client.ClientResult;
 import com.github.berry120.wikiquiz.model.client.ClientScore;
 import com.github.berry120.wikiquiz.socket.DisplaySocket;
 import com.github.berry120.wikiquiz.socket.PhoneSocket;
+import com.github.berry120.wikiquiz.socket.RootSocket;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -22,14 +24,16 @@ public class QuizService {
     private final RandomIdGenerator idGenerator;
     private final DisplaySocket displaySocket;
     private final PhoneSocket phoneSocket;
+    private final RootSocket rootSocket;
     private final QuizState quizState;
 
     @Inject
-    QuizService(RandomIdGenerator idGenerator, QuizState quizState, DisplaySocket displaySocket, PhoneSocket phoneSocket) {
+    QuizService(RandomIdGenerator idGenerator, QuizState quizState, DisplaySocket displaySocket, PhoneSocket phoneSocket, RootSocket rootSocket) {
         this.idGenerator = idGenerator;
         this.quizState = quizState;
         this.displaySocket = displaySocket;
         this.phoneSocket = phoneSocket;
+        this.rootSocket = rootSocket;
     }
 
     public String createQuiz() {
@@ -46,6 +50,10 @@ public class QuizService {
 
     public void startQuiz(String quizId) {
         nextQuestionOrFinish(quizId);
+    }
+
+    public boolean quizExists(String quizId) {
+        return quizState.quizExists(quizId);
     }
 
     public Quiz getQuiz(String quizId) {
@@ -125,7 +133,11 @@ public class QuizService {
     }
 
     public String addPlayer(String quizId, String playerName) {
-        return quizState.addPlayer(quizId, playerName);
+        String id = quizState.addPlayer(quizId, playerName);
+        ClientPlayerJoined clientPlayerJoined = new ClientPlayerJoined(playerName);
+        rootSocket.sendObject(quizId, clientPlayerJoined);
+
+        return id;
     }
 
 }

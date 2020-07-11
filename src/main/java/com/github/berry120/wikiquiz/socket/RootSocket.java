@@ -1,12 +1,8 @@
 package com.github.berry120.wikiquiz.socket;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.model.client.ClientObject;
-import com.github.berry120.wikiquiz.service.QuizService;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
@@ -19,18 +15,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
-@ServerEndpoint(value = "/socket/phone/{quizid}/{personid}", encoders = JacksonEncoder.class)
-public class PhoneSocket {
+@ServerEndpoint(value = "/socket/{quizid}", encoders = JacksonEncoder.class)
+public class RootSocket {
 
-    private final QuizService quizService;
     private final Map<String, List<Session>> sessions;
-    private final ObjectMapper objectMapper;
 
-    @Inject
-    public PhoneSocket(QuizService quizService) {
-        this.quizService = quizService;
+    public RootSocket() {
         sessions = new ConcurrentHashMap<>();
-        objectMapper = new ObjectMapper();
     }
 
     public void sendObject(String quizid, ClientObject obj) {
@@ -57,27 +48,9 @@ public class PhoneSocket {
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("quizid") String quizid, @PathParam("personid") String personid) {
+    public void onOpen(Session session, @PathParam("quizid") String quizid) {
         sessions.putIfAbsent(quizid, new ArrayList<>());
         sessions.get(quizid).add(session);
-        System.out.println("Opened - " + quizid + " - " + personid);
-    }
-
-    @OnMessage
-    public void onMessage(String rawMessage, @PathParam("quizid") String quizid, @PathParam("personid") String personid) {
-        try {
-            PhoneSocketMessage message = objectMapper.readValue(rawMessage, PhoneSocketMessage.class);
-            System.out.println(quizid + " - " + personid + " - " + message);
-            if (message.getType().equals("fakeanswer")) {
-                quizService.addFakeAnswer(quizid, personid, message.getAnswer());
-            } else if (message.getType().equals("answer")) {
-                quizService.addAnswer(quizid, personid, message.getAnswer());
-            } else {
-                throw new RuntimeException("Unknown type");
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
     }
 
 }

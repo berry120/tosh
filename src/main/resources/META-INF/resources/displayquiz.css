@@ -1,0 +1,33 @@
+.fakeanswertime {
+    font-family: 'Bangers', cursive;
+    font-size: 2em;
+}
+
+.question {
+    font-family: 'Bangers', cursive;
+    font-size: 2em;
+}
+
+.answer {
+    font-family: 'Bangers', cursive;
+}
+
+.answer.correct {
+    color: darkgreen;
+    font-weight: bold;
+    font-size: 1.3em;
+}
+
+.results {
+    font-family: 'Bangers', cursive;
+}
+
+.scores {
+    font-family: 'Bangers', cursive;
+    font-size: 2em;
+}
+
+.name {
+    font-family: 'Bangers', cursive;
+    margin-right: 2em;
+}

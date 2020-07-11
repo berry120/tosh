@@ -22,6 +22,10 @@ public class QuizState {
         return redisService.retrieveQuiz(quizId);
     }
 
+    public boolean quizExists(String quizId) {
+        return redisService.quizExists(quizId);
+    }
+
     public void createQuiz(Quiz quiz) {
         redisService.storeQuiz(quiz);
     }

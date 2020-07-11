@@ -2,28 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>WikiQuiz</title>
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/style.css">-->
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/phonestart.css">-->
+    <link href="/style.css" rel="stylesheet" type="text/css">
+    <link href="/phonestart.css" rel="stylesheet" type="text/css">
     <script>
-        let name = window.prompt("name?", "Michael");
+        document.onload = function () {
+            let nameInput = document.getElementById('nameInput');
+            nameInput.focus();
+            nameInput.select();
+        }
 
-        let registry = {};
-        registry.playerName = name;
+        function register() {
+            document.getElementById("registerButton").disabled = true;
+            let registry = {};
+            registry.playerName = document.getElementById("nameInput").value;
 
-        fetch("http://" + location.host + "/phone/{quizid}/register", {
-            method: 'post',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(registry)
-        }).then(function (response) {
-            return response.text();
-        }).then(function (text) {
-            window.location.href = "http://" + location.host + "/phone/{quizid}/" + text;
-        });
+            fetch(location.protocol + "//" + location.host + "/phone/{quizid}/register", {
+                method: 'post',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(registry)
+            }).then(function (response) {
+                return response.text();
+            }).then(function (text) {
+                window.location.href = "http://" + location.host + "/phone/{quizid}/" + text;
+            });
+        }
 
     </script>
 </head>
 <body>
+<div>
+    <p>Almost in!</p>
+    <p>Who are you, anyway?</p>
+</div>
+<input id="nameInput">
+<button id="registerButton" onclick="register()">That's me</button>
 </body>
 </html>

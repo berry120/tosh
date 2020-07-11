@@ -1,0 +1,73 @@
+.loading {
+    border: 16px solid lightgray; /* Light grey */
+    border-top: 16px solid black; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.introText {
+    font-family: 'Bangers', cursive;
+    font-size: 2em;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.question {
+    font-family: 'Bangers', cursive;
+    font-size: 2em;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: column;
+}
+
+button {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5em;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border: 0.1em solid black;
+    background-color: white;
+}
+
+.answerButton {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5em;
+    display: block;
+}
+
+.fakeanswerprompt {
+    font-family: 'Bangers', cursive;
+    font-size: 1.5em;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+input {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    text-align: center;
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 1.5em;
+    border: 0;
+    border-bottom: 2px solid black;
+}
+
+.fakesubmissionbutton {
+    margin-top: 30px;
+}

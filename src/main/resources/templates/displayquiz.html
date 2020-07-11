@@ -3,28 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>WikiQuiz</title>
-    <style>
-        .question {
-            font-size: 2em;
-        }
-
-        .answer.correct {
-            color: darkgreen;
-            font-weight: bold;
-            font-size: 1.3em;
-        }
-
-        .results {
-        }
-
-        .scores {
-            font-size: 2em;
-        }
-
-        .name {
-            margin-right: 2em;
-        }
-    </style>
+    <link href="/style.css" rel="stylesheet" type="text/css">
+    <link href="/displayquiz.css" rel="stylesheet" type="text/css">
     <script>
         let socket = new WebSocket("ws://" + location.host + "/socket/display/{quizid}");
         let nextEvent;

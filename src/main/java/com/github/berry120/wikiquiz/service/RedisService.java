@@ -24,7 +24,7 @@ import java.util.Optional;
 @ApplicationScoped
 public class RedisService {
 
-    private static final long EXPIRY_SECONDS = 60 * 30; //30 minutes
+    private static final long EXPIRY_SECONDS = 60 * 60 * 6; //6 hours
     private final ObjectMapper mapper;
     private StatefulRedisConnection<String, String> connection;
 
@@ -41,12 +41,18 @@ public class RedisService {
     }
 
     public void storeQuiz(Quiz quiz) {
+        System.out.println("STORING QUIZ " + quiz.getId());
         set(new QuizKey(quiz.getId()), quiz);
     }
 
     public Quiz retrieveQuiz(String quizId) {
         return get(new QuizKey(quizId), new TypeReference<Quiz>() {
         }).orElseThrow(() -> new RuntimeException("No quiz exists with id " + quizId));
+    }
+
+    public boolean quizExists(String quizId) {
+        return get(new QuizKey(quizId), new TypeReference<Quiz>() {
+        }).isPresent();
     }
 
     public Map<String, Player> retrieveAllPlayers(String quizId) {

@@ -2,33 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>WikiQuiz</title>
-    <style>
-        .question {
-            font-size: 2em;
-        }
-
-        .answerButton {
-            display: block;
-        }
-    </style>
+    <link href="/style.css" rel="stylesheet" type="text/css">
+    <link href="/phonequiz.css" rel="stylesheet" type="text/css">
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/style.css">-->
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/phonequiz.css">-->
     <script>
         window.socket = new WebSocket("ws://" + location.host + "/socket/phone/{quizid}/{personid}");
 
         socket.onopen = function () {
             console.log("Connected to the web socket");
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("introText").style.display = "";
         };
         socket.onmessage = function (m) {
             console.log("Got message: " + m.data);
+            document.getElementById("introText").style.display = "none";
             let message = JSON.parse(m.data);
             if (message.type === "fake_answer_request") {
-                let fakeAnswer = "fake answer from {personid}";
-                // let fakeAnswer = prompt(message.question);
-                window.socket.send(JSON.stringify({
-                    type: "fakeanswer",
-                    answer: fakeAnswer
-                }));
+                document.getElementById("fakesubmissionanswer").value = "";
+                document.getElementById("fakesubmissionquestion").innerText = message.question;
+                document.getElementById("fakesubmission").style.display = "";
+                document.getElementById("fakesubmissionbutton").disabled = false;
             } else if (message.type === "question") {
+                document.getElementById("fakesubmission").style.display = "none";
+                document.getElementById("answerquestion").style.display = "";
                 document.getElementById("question").innerText = message.question;
                 document.getElementById("buttons").innerHTML = "";
                 let code = 97;
@@ -43,6 +42,7 @@
                     code++;
                 }
             } else if (message.type === "answer") {
+                document.getElementById("answerquestion").style.display = "none";
                 //Do nothing
             } else if (message.type === "results") {
                 //Quiz is over
@@ -54,14 +54,41 @@
                 type: "answer",
                 answer: answer
             }));
+            document.getElementById("introText").style.display = "";
+            document.getElementById("answerquestion").style.display = "none";
+        }
+
+        function submitFakeAnswer() {
+            window.socket.send(JSON.stringify({
+                type: "fakeanswer",
+                answer: document.getElementById("fakesubmissionanswer").value
+            }));
+            document.getElementById("fakesubmissionbutton").disabled = true;
+            document.getElementById("introText").style.display = "";
+            document.getElementById("fakesubmission").style.display = "none";
         }
 
     </script>
 </head>
 <body>
-<div id="question"></div>
-<div id="buttons">
+<div class="loading" id="loading"></div>
 
+<div class="introText" id="introText" style="display: none;">
+    <p>You're all set.</p>
+    <p>Tell everyone else to get a move on.</p>
+</div>
+
+<div class="fakesubmission" id="fakesubmission" style="display: none;">
+    <div class="fakeanswerprompt" id="fakeanswerprompt">Time to give your best fib...</div>
+    <div class="fakesubmissionquestion question" id="fakesubmissionquestion"></div>
+    <input class="fakesubmissionanswer" id="fakesubmissionanswer">
+    <button class="fakesubmissionbutton" id="fakesubmissionbutton" onclick="submitFakeAnswer()">That'll fool 'em
+    </button>
+</div>
+
+<div class="answerquestion" id="answerquestion" style="display: none;">
+    <div class="question" id="question"></div>
+    <div class="buttons" id="buttons"></div>
 </div>
 </body>
 </html>

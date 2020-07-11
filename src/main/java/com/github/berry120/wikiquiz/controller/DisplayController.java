@@ -18,7 +18,7 @@ public class DisplayController {
         this.displayquiz = displayquiz;
     }
 
-    @GET()
+    @GET
     @Path("/{quizId}")
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance mainDisplay(@PathParam String quizId) {
