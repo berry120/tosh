@@ -16,6 +16,8 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -41,12 +43,21 @@ public class RedisService {
         mapper = new ObjectMapper();
     }
 
-    public void connect() {
+    @PostConstruct
+    void connect() {
         if (connection == null || !connection.isOpen()) {
             RedisClient client = RedisClient.create("redis://" + redisPwd + "@" + redisHost + ":" + redisPort);
             connection = client.connect();
         }
     }
+
+    @PreDestroy
+    void close() {
+        if (connection != null && connection.isOpen()) {
+            connection.close();
+        }
+    }
+
 
     public void storeQuiz(Quiz quiz) {
         System.out.println("STORING QUIZ " + quiz.getId());
@@ -145,7 +156,6 @@ public class RedisService {
 
 
     private <T> Optional<T> get(RedisKey redisKey, TypeReference<T> type) {
-        connect();
         try {
             String json = connection.sync().get(mapper.writeValueAsString(redisKey));
             if (json == null) {
@@ -159,7 +169,6 @@ public class RedisService {
     }
 
     private void set(RedisKey redisKey, Object obj) {
-        connect();
         try {
             SetArgs args = SetArgs.Builder.ex(EXPIRY_SECONDS);
             String key = mapper.writeValueAsString(redisKey);
@@ -171,7 +180,6 @@ public class RedisService {
     }
 
     private void delete(RedisKey redisKey) {
-        connect();
         try {
             String key = mapper.writeValueAsString(redisKey);
             connection.sync().del(key);
