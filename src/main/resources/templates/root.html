@@ -18,7 +18,6 @@
 
         let backgroundAudio = new Audio('/audio/background_loop.mp3');
         backgroundAudio.loop = true;
-        backgroundAudio.play();
 
         let joinedIdx = 0;
         let joinedAudio = [
@@ -58,6 +57,7 @@
 
         function showTutorial() {
             (async () => {
+                backgroundAudio.play();
 
                 document.getElementById("game-expl").style.display = "none";
                 document.getElementById("players").style.display = "none";
