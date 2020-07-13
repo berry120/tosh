@@ -13,8 +13,8 @@ import com.github.berry120.wikiquiz.socket.PhoneSocket;
 import com.github.berry120.wikiquiz.socket.RootSocket;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -86,7 +86,7 @@ public class QuizRunnerService {
     public void sendQuestionStage(String quizId) {
         Quiz quiz = quizStateService.getQuiz(quizId);
         QuizQuestion question = quiz.getQuestions().get(quizStateService.getQuestionNumber(quizId));
-        List<String> questionOptions = new ArrayList<>(quizStateService.getFakeAnswers(quizId).values());
+        Set<String> questionOptions = new HashSet<>(quizStateService.getFakeAnswers(quizId).values());
         for (String sampleWrongAnswer : question.getSampleWrongAnswers()) {
             if (questionOptions.size() < 3) {
                 questionOptions.add(sampleWrongAnswer);
