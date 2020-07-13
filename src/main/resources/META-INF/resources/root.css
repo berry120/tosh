@@ -1,12 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,900&display=swap');
+
 h1 {
     text-transform: uppercase;
     font-family: 'Bangers', cursive;
     font-size: 5em;
     color: lightgray;
     margin: 0;
+    animation-name: h1fade;
+    animation-direction: alternate-reverse;
+    animation-duration: 10s;
+    animation-iteration-count: infinite;
 }
 
-div {
+@keyframes h1fade {
+    from {
+        color: lightgray;
+    }
+    to {
+        color: darkgray;
+    }
+}
+
+.mainsection {
     max-width: 800px;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -67,4 +82,24 @@ img {
     color: white;
     background-color: darkblue;
     border-radius: 3px;
+}
+
+.tutorial {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100%;
+    background-color: white;
+}
+
+.tutorial div {
+    display: none;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    font-size: 4em;
+}
+
+.tutorial div.active {
+    display: block;
 }

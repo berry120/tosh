@@ -22,19 +22,19 @@
             let message = JSON.parse(m.data);
             if (message.type === "fake_answer_request") {
                 document.getElementById("fakesubmissionanswer").value = "";
-                document.getElementById("fakesubmissionquestion").innerText = message.question;
+                document.getElementById("fakesubmissionquestion").textContent = message.question;
                 document.getElementById("fakesubmission").style.display = "";
                 document.getElementById("fakesubmissionbutton").disabled = false;
             } else if (message.type === "question") {
                 document.getElementById("fakesubmission").style.display = "none";
                 document.getElementById("answerquestion").style.display = "";
-                document.getElementById("question").innerText = message.question;
-                document.getElementById("buttons").innerHTML = "";
+                document.getElementById("question").textContent = message.question;
+                document.getElementById("buttons").textContent = "";
                 let code = 97;
                 for (const answer of message.answers) {
                     let buttonEle = document.createElement("button");
                     buttonEle.classList.add("answerButton");
-                    buttonEle.innerHTML = String.fromCharCode(code) + ": " + answer;
+                    buttonEle.textContent = String.fromCharCode(code) + ": " + answer;
                     buttonEle.onclick = function () {
                         quizClick(answer);
                     }

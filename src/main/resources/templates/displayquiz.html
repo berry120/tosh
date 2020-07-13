@@ -8,6 +8,20 @@
     <link href="/style.css" rel="stylesheet" type="text/css">
     <link href="/displayquiz.css" rel="stylesheet" type="text/css">
     <script>
+        let answeredIdx = 0;
+        let answeredAudio = [
+            new Audio('/audio/answered/1.mp3'),
+            new Audio('/audio/answered/2.mp3'),
+            new Audio('/audio/answered/3.mp3'),
+            new Audio('/audio/answered/4.mp3'),
+            new Audio('/audio/answered/5.mp3'),
+            new Audio('/audio/answered/6.mp3'),
+            new Audio('/audio/answered/7.mp3'),
+            new Audio('/audio/answered/8.mp3')
+        ];
+        let correctAudio = new Audio('/audio/correct.mp3');
+        let incorrectAudio = new Audio('/audio/incorrect.mp3');
+
         const sleep = m => new Promise(r => setTimeout(r, m));
 
         const TIME_TO_PROVIDE_FAKE_ANSWERS = 30000;
@@ -31,15 +45,15 @@
                 displayAnswers(message);
             } else if (message.type === "results") {
                 cancelTimer();
-                document.getElementById("question").innerHTML = "";
-                document.getElementById("answers").innerHTML = "";
+                document.getElementById("question").textContent = "";
+                document.getElementById("answers").textContent = "";
 
                 for (const score of message.scores) {
                     let nameEle = document.createElement("span");
                     nameEle.classList.add("name");
-                    nameEle.innerText = score.name;
+                    nameEle.textContent = score.name;
                     let valEle = document.createElement("span");
-                    valEle.innerText = score.score;
+                    valEle.textContent = score.score;
                     valEle.classList.add("value");
 
                     let scoreEle = document.createElement("div");
@@ -57,9 +71,9 @@
 
             (async () => {
 
-                document.getElementById("question").innerText = message.question;
+                document.getElementById("question").textContent = message.question;
 
-                document.getElementById("answers").innerHTML = "";
+                document.getElementById("answers").textContent = "";
                 document.getElementById("fakeanswertime").style.display = "";
 
                 startTimer(TIME_TO_PROVIDE_FAKE_ANSWERS);
@@ -77,12 +91,12 @@
             (async () => {
                 currentQuestion = message.question;
                 document.getElementById("fakeanswertime").style.display = "none";
-                document.getElementById("question").innerText = "Pick your answers!";
-                document.getElementById("answers").innerHTML = "";
+                document.getElementById("question").textContent = "Pick your answers!";
+                document.getElementById("answers").textContent = "";
                 for (const answer of message.answers) {
                     let answerTextEle = document.createElement("div");
                     answerTextEle.classList.add("answertext");
-                    answerTextEle.innerHTML = answer;
+                    answerTextEle.textContent = answer;
 
                     let answerEle = document.createElement("div");
                     answerEle.classList.add("answer");
@@ -106,13 +120,15 @@
             cancelTimer();
             (async () => {
                 let correctAnswer = message.correctAnswer;
-                document.getElementById("question").innerText = currentQuestion;
+                document.getElementById("question").textContent = currentQuestion;
                 await sleep(5000);
 
-                for (let key in message.answers) {
+                for (let [key, playersAnsweredList] of message.answers) {
 
-                    let fakeAuthor = message.fakeAnswers[key];
-                    let playersAnsweredList = message.answers[key];
+                    let fakeAuthorMsg = "Our tosh!";
+                    if (message.fakeAnswers[key]) {
+                        fakeAuthorMsg = message.fakeAnswers[key] + "'s tosh!";
+                    }
 
                     let answerEle = getAnswer(key);
                     answerEle.classList.add("active");
@@ -122,9 +138,16 @@
                     playersansweredEle.classList.add("playersanswered");
                     answerEle.appendChild(playersansweredEle);
 
-                    for (let idx in playersAnsweredList) {
+                    answeredIdx = 0;
+                    for (let playerAnswered of playersAnsweredList) {
+                        answeredAudio[answeredIdx].play();
+                        answeredIdx = (answeredIdx + 1);
+                        if (answeredIdx >= answeredAudio.length) {
+                            answeredIdx = answeredAudio.length - 1;
+                        }
+
                         let playeransweredEle = document.createElement("span");
-                        playeransweredEle.textContent = playersAnsweredList[idx];
+                        playeransweredEle.textContent = playerAnswered;
                         playersansweredEle.appendChild(playeransweredEle);
                         await sleep(800);
                     }
@@ -132,15 +155,17 @@
                     await sleep(2000);
 
                     if (key !== correctAnswer) {
+                        incorrectAudio.play();
                         answerEle.classList.add("tosh");
                         let tosherEle = document.createElement("div");
                         tosherEle.classList.add("tosher")
-                        tosherEle.textContent = fakeAuthor + "'s tosh!";
+                        tosherEle.textContent = fakeAuthorMsg;
                         answerEle.appendChild(tosherEle);
                         await sleep(5000);
                         answerEle.classList.remove("active");
                         await sleep(500);
                     } else {
+                        correctAudio.play();
                         answerEle.classList.add("correct");
                     }
                 }
@@ -156,12 +181,6 @@
                     type: "displayanswerfinished",
                 }));
             })();
-
-            for (const element of document.getElementById("answers").children) {
-                if (element.innerHTML === message.correctAnswer) {
-                    element.classList.add("correct");
-                }
-            }
         }
 
         function markNonCorrectAnswersAsTosh(correctAnswer) {

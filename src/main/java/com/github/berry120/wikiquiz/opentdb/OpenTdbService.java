@@ -3,6 +3,7 @@ package com.github.berry120.wikiquiz.opentdb;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.opentdb.model.Difficulty;
+import com.github.berry120.wikiquiz.opentdb.model.Encoding;
 import com.github.berry120.wikiquiz.opentdb.model.Question;
 import com.github.berry120.wikiquiz.opentdb.model.QuestionResult;
 import com.github.berry120.wikiquiz.opentdb.model.Type;
@@ -34,6 +35,7 @@ public class OpenTdbService {
                         .difficulty(Difficulty.HARD)
                         .numQuestions(100)
                         .type(Type.MULTIPLE_CHOICE)
+                        .encoding(Encoding.URL)
                         .build())
                 .stream()
                 .filter(q -> !q.getQuestion().contains("of these"))
@@ -52,15 +54,13 @@ public class OpenTdbService {
                     .thenApply(r -> {
                         try {
                             return objectMapper.readValue(r.body(), QuestionResult.class)
-                                    .getResults();
+                                    .decodeUrl().getResults();
                         } catch (JsonProcessingException e) {
                             throw new RuntimeException(e);
                         }
                     })
                     .get();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
 

@@ -6,6 +6,24 @@
     <link href="/style.css" rel="stylesheet" type="text/css">
     <link href="/root.css" rel="stylesheet" type="text/css">
     <script>
+        const sleep = m => new Promise(r => setTimeout(r, m));
+
+        let backgroundAudio = new Audio('/audio/background_loop.mp3');
+        backgroundAudio.loop = true;
+        backgroundAudio.play();
+
+        let joinedIdx = 0;
+        let joinedAudio = [
+            new Audio('/audio/joined/1.mp3'),
+            new Audio('/audio/joined/2.mp3'),
+            new Audio('/audio/joined/3.mp3'),
+            new Audio('/audio/joined/4.mp3'),
+            new Audio('/audio/joined/5.mp3'),
+            new Audio('/audio/joined/6.mp3'),
+            new Audio('/audio/joined/7.mp3'),
+            new Audio('/audio/joined/8.mp3')
+        ];
+
         let socket = new WebSocket("ws://" + location.host + "/socket/{quizid}");
 
         socket.onmessage = function (m) {
@@ -13,10 +31,13 @@
 
             let message = JSON.parse(m.data);
             if (message.type === "player_joined") {
+                joinedAudio[joinedIdx].play();
+                joinedIdx = (joinedIdx + 1) % joinedAudio.length;
+
                 document.getElementById("game-expl").style.display = "none";
 
                 let playerEle = document.createElement("span");
-                playerEle.innerText = message.playerName;
+                playerEle.textContent = message.playerName;
                 playerEle.classList.add("player");
                 document.getElementById("players").appendChild(playerEle);
 
@@ -27,19 +48,61 @@
             }
         };
 
+        function showTutorial() {
+            (async () => {
+
+                // document.getElementById("game-expl").style.display = "none";
+                // document.getElementById("players").style.display = "none";
+                // document.getElementById("want-in").style.display = "none";
+                // document.getElementById("start-link").style.display = "none";
+                // document.getElementById("dev-only").style.display = "none";
+                // document.getElementById("qrcontainer").style.display = "none";
+                // document.getElementById("tutorial").style.display = "";
+                //
+                // for (let ele of document.getElementById("tutorial").children) {
+                //     ele.classList.add("active");
+                //     await sleep(ele.getAttribute("data-timeout"));
+                //     ele.classList.remove("active");
+                // }
+
+                window.location.href = "/display/{quizid}";
+
+            })();
+        }
+
     </script>
 </head>
 <body>
 <h1>Tosh</h1>
-<div class="game-expl" id="game-expl">
+<div class="mainsection game-expl" id="game-expl">
     <p>Tosh is a game similar to Balderdash, Fibbage, Fictionary and others.</p>
     <p>Fool your opponents by providing wrong answers for them to guess!</p>
 </div>
-<div class="players" id="players">
+<div class="mainsection players" id="players">
 </div>
-<div class="want-in" id="want-in">Want in? Just scan.</div>
-<div class="start-link" id="start-link" style="display: none;"><a href="/display/{quizid}">Everyone's ready</a></div>
-<div class="dev-only">(Dev only) <a href="/phone/{quizid}">Phone link</a></div>
-<div class="qrcontainer"><img src="/qrcode/{quizid}"></div>
+<div class="mainsection want-in" id="want-in">Want in? Just scan.</div>
+<div class="mainsection start-link" id="start-link" style="display: none;">
+    <a onclick="showTutorial();">Everyone's ready</a>
+</div>
+<div class="mainsection dev-only" id="dev-only">(Dev only) <a href="/phone/{quizid}">Phone link</a></div>
+<div class="mainsection qrcontainer" id="qrcontainer"><img alt="/qrcode/{quizid}" src="/qrcode/{quizid}"></div>
+<div class="tutorial" id="tutorial" style="display: none;">
+    <div data-timeout="3000">Ok! Let's get started.</div>
+    <div data-timeout="3000">Tosh is a game of deception & wits.</div>
+    <div data-timeout="5000">You'll be presented with a series of questions.</div>
+    <div data-timeout="6000">For each question, you first need to provide a fake answer you think others will fall for.
+        That's your Tosh!
+    </div>
+    <div data-timeout="5000">You then need to pick the correct answer, avoiding everyone else's Tosh.</div>
+    <div data-timeout="7000">You get 100 points for guessing the correct answer, and 40 points for each person you
+        fool.
+    </div>
+    <div data-timeout="5000">Let's get going!</div>
+    <div data-timeout="1000">First question coming up in... 5</div>
+    <div data-timeout="1000">First question coming up in... 4</div>
+    <div data-timeout="1000">First question coming up in... 3</div>
+    <div data-timeout="1000">First question coming up in... 2</div>
+    <div data-timeout="1000">First question coming up in... 1</div>
+</div>
 </body>
 </html>
