@@ -76,6 +76,10 @@
             document.getElementById("fakesubmission").style.display = "none";
         }
 
+        function checkLength() {
+            document.getElementById("fakesubmissionbutton").disabled = document.getElementById("fakesubmissionanswer").value.length === 0;
+        }
+
     </script>
 </head>
 <body>
@@ -87,10 +91,12 @@
 </div>
 
 <div class="fakesubmission" id="fakesubmission" style="display: none;">
-    <div class="fakeanswerprompt" id="fakeanswerprompt">Time to give your best fib...</div>
+    <label class="fakeanswerprompt" for="fakesubmissionanswer" id="fakeanswerprompt">Time to give your best
+        fib...</label>
     <div class="fakesubmissionquestion question" id="fakesubmissionquestion"></div>
-    <input class="fakesubmissionanswer" id="fakesubmissionanswer">
-    <button class="fakesubmissionbutton" id="fakesubmissionbutton" onclick="submitFakeAnswer()">That'll fool 'em
+    <input class="fakesubmissionanswer" id="fakesubmissionanswer" maxlength="30" oninput="checkLength();">
+    <button class="fakesubmissionbutton" disabled id="fakesubmissionbutton" onclick="submitFakeAnswer()">That'll fool
+        'em
     </button>
 </div>
 

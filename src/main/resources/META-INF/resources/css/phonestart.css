@@ -1,4 +1,5 @@
-div {
+div, label {
+    display: block;
     font-family: 'Bangers', cursive;
     font-size: 1.5em;
     margin: 5px;

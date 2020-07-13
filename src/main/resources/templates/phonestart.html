@@ -12,8 +12,8 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>WikiQuiz</title>
-    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/style.css">-->
-    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/phonestart.css">-->
+    <!--        <link rel="stylesheet" type="text/css" href="../META-INF/resources/css/style.css">-->
+    <!--        <link rel="stylesheet" type="text/css" href="../META-INF/resources/css/phonestart.css">-->
     <link href="/css/style.css" rel="stylesheet" type="text/css">
     <link href="/css/phonestart.css" rel="stylesheet" type="text/css">
     <script>
@@ -42,14 +42,18 @@
             });
         }
 
+        function checkLength() {
+            document.getElementById("registerButton").disabled = document.getElementById("nameInput").value.length === 0;
+        }
+
     </script>
 </head>
 <body>
 <div>
     <p>Almost in!</p>
-    <p>Who are you, anyway?</p>
+    <label for="nameInput">Who are you, anyway?</label>
 </div>
-<input id="nameInput" maxlength="30">
-<button id="registerButton" onclick="register()">That's me</button>
+<input id="nameInput" maxlength="30" oninput="checkLength();">
+<button disabled id="registerButton" onclick="register();">That's me</button>
 </body>
 </html>
