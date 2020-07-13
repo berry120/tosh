@@ -1,6 +1,8 @@
 package com.github.berry120.wikiquiz.controller;
 
-import com.github.berry120.wikiquiz.service.QuizService;
+import com.github.berry120.wikiquiz.model.Quiz;
+import com.github.berry120.wikiquiz.service.QuizCreationService;
+import com.github.berry120.wikiquiz.service.QuizRunnerService;
 import io.quarkus.qute.Template;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -14,21 +16,23 @@ import java.net.URI;
 @Path("/")
 public class RootController {
 
-    private final QuizService quizService;
+    private final QuizCreationService quizCreationService;
+    private final QuizRunnerService quizRunnerService;
     private final Template root;
 
     @Inject
-    RootController(QuizService quizService, Template root) {
-        this.quizService = quizService;
+    RootController(QuizRunnerService quizRunnerService, QuizCreationService quizCreationService, Template root) {
+        this.quizRunnerService = quizRunnerService;
+        this.quizCreationService = quizCreationService;
         this.root = root;
     }
 
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response root() {
-        String quizid = quizService.createQuiz();
+        Quiz quiz = quizCreationService.createQuiz();
         return Response
-                .temporaryRedirect(URI.create("/" + quizid))
+                .temporaryRedirect(URI.create("/" + quiz.getId()))
                 .build();
     }
 
@@ -36,7 +40,7 @@ public class RootController {
     @Path("/{quizid}")
     @Produces(MediaType.TEXT_HTML)
     public Object root(@PathParam("quizid") String quizid) {
-        if (quizService.quizExists(quizid)) {
+        if (quizRunnerService.quizExists(quizid)) {
             return root
                     .data("quizid", quizid);
         } else {

@@ -1,3 +1,33 @@
+.meter {
+    height: 30px;
+    width: 100%;
+}
+
+.meter div {
+    height: 100%;
+    width: 0;
+    margin: auto;
+    text-align: center;
+}
+
+.progress {
+    text-align: center;
+    background-color: lightgray;
+    animation-name: progressBar;
+    animation-timing-function: linear;
+}
+
+@keyframes progressBar {
+    0% {
+        width: 100%;
+        background-color: lightgray
+    }
+    100% {
+        width: 0;
+        background-color: red
+    }
+}
+
 .fakeanswertime {
     font-family: 'Bangers', cursive;
     font-size: 2em;
@@ -10,12 +40,66 @@
 
 .answer {
     font-family: 'Bangers', cursive;
+    font-size: 1.3em;
+    margin: 10px;
 }
 
 .answer.correct {
-    color: darkgreen;
-    font-weight: bold;
-    font-size: 1.3em;
+    color: green;
+}
+
+.answer.tosh {
+    color: lightgray;
+}
+
+.answer.active {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+}
+
+.answer.active .answertext {
+    font-size: 5em;
+    padding: 10px 20px;
+}
+
+.answer .playersanswered {
+    display: none;
+}
+
+.answer .tosher {
+    display: none;
+}
+
+.answer.active .tosher {
+    display: inline-block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    padding: 4px 8px;
+    transform: translateX(-50%) translateY(-100%) rotate(-10deg);
+    z-index: 1;
+    background-color: darkred;
+    color: white;
+}
+
+.answer.active .playersanswered {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.answer.active .playersanswered span {
+    display: inline;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    padding: 2px 12px;
+    background-color: darkslategrey;
+    color: white;
+    border-radius: 6px;
+    transform: translateY(-100%);
 }
 
 .results {

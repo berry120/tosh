@@ -3,66 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <title>WikiQuiz</title>
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/style.css">-->
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/displayquiz.css">-->
     <link href="/style.css" rel="stylesheet" type="text/css">
     <link href="/displayquiz.css" rel="stylesheet" type="text/css">
     <script>
+        const sleep = m => new Promise(r => setTimeout(r, m));
+
+        const TIME_TO_PROVIDE_FAKE_ANSWERS = 30000;
+        const TIME_TO_PICK_ANSWERS = 10000;
+
+        let currentQuestion;
         let socket = new WebSocket("ws://" + location.host + "/socket/display/{quizid}");
         let nextEvent;
 
-        function setFakeAnswersTimeout() {
-            sendAfterTimeout({
-                type: "fakeanswerfinished",
-            }, 10000);
-        }
-
-        function setAnswerQuestionTimeout() {
-            sendAfterTimeout({
-                type: "questionfinished",
-            }, 10000);
-        }
-
-        function setDisplayAnswerTimeout() {
-            sendAfterTimeout({
-                type: "displayanswerfinished",
-            }, 3000);
-        }
-
-        function sendAfterTimeout(toSend, timeout) {
-            nextEvent = setTimeout(function () {
-                socket.send(JSON.stringify(toSend));
-            }, timeout);
-        }
-
         socket.onmessage = function (m) {
             console.log("Got message: " + m.data);
+
             clearTimeout(nextEvent);
 
             let message = JSON.parse(m.data);
             if (message.type === "fake_answer_request") {
-                currentQuestionNumber = message.questionNumber;
-                document.getElementById("question").innerText = "";
-                document.getElementById("answers").innerHTML = "";
-                document.getElementById("fakeanswertime").style.display = "";
-                setFakeAnswersTimeout();
+                displaySupplyFakeAnswer(message);
             } else if (message.type === "question") {
-                document.getElementById("fakeanswertime").style.display = "none";
-                document.getElementById("question").innerText = message.question;
-                document.getElementById("answers").innerHTML = "";
-                for (const element of message.answers) {
-                    let answerEle = document.createElement("div");
-                    answerEle.classList.add("answer");
-                    answerEle.innerHTML = element;
-                    document.getElementById("answers").appendChild(answerEle);
-                }
-                setAnswerQuestionTimeout();
+                displayChooseAnswer(message);
             } else if (message.type === "answer") {
-                for (const element of document.getElementById("answers").children) {
-                    if (element.innerHTML === message.correctAnswer) {
-                        element.classList.add("correct");
-                    }
-                }
-                setDisplayAnswerTimeout();
+                displayAnswers(message);
             } else if (message.type === "results") {
+                cancelTimer();
                 document.getElementById("question").innerHTML = "";
                 document.getElementById("answers").innerHTML = "";
 
@@ -84,17 +52,160 @@
             }
         };
 
+        function displaySupplyFakeAnswer(message) {
+            cancelTimer();
+
+            (async () => {
+
+                document.getElementById("question").innerText = message.question;
+
+                document.getElementById("answers").innerHTML = "";
+                document.getElementById("fakeanswertime").style.display = "";
+
+                startTimer(TIME_TO_PROVIDE_FAKE_ANSWERS);
+                nextEvent = setTimeout(function () {
+                    socket.send(JSON.stringify({
+                        type: "fakeanswerfinished",
+                    }));
+                }, TIME_TO_PROVIDE_FAKE_ANSWERS);
+            })();
+        }
+
+        function displayChooseAnswer(message) {
+            cancelTimer();
+
+            (async () => {
+                currentQuestion = message.question;
+                document.getElementById("fakeanswertime").style.display = "none";
+                document.getElementById("question").innerText = "Pick your answers!";
+                document.getElementById("answers").innerHTML = "";
+                for (const answer of message.answers) {
+                    let answerTextEle = document.createElement("div");
+                    answerTextEle.classList.add("answertext");
+                    answerTextEle.innerHTML = answer;
+
+                    let answerEle = document.createElement("div");
+                    answerEle.classList.add("answer");
+                    answerEle.appendChild(answerTextEle);
+
+                    document.getElementById("answers").appendChild(answerEle);
+                }
+
+                startTimer(TIME_TO_PICK_ANSWERS);
+                nextEvent = setTimeout(function () {
+                    socket.send(JSON.stringify({
+                        type: "questionfinished",
+                    }));
+                }, TIME_TO_PICK_ANSWERS);
+
+            })();
+
+        }
+
+        function displayAnswers(message) {
+            cancelTimer();
+            (async () => {
+                let correctAnswer = message.correctAnswer;
+                document.getElementById("question").innerText = currentQuestion;
+                await sleep(5000);
+
+                for (let key in message.answers) {
+
+                    let fakeAuthor = message.fakeAnswers[key];
+                    let playersAnsweredList = message.answers[key];
+
+                    let answerEle = getAnswer(key);
+                    answerEle.classList.add("active");
+                    await sleep(2000);
+
+                    let playersansweredEle = document.createElement("div");
+                    playersansweredEle.classList.add("playersanswered");
+                    answerEle.appendChild(playersansweredEle);
+
+                    for (let idx in playersAnsweredList) {
+                        let playeransweredEle = document.createElement("span");
+                        playeransweredEle.textContent = playersAnsweredList[idx];
+                        playersansweredEle.appendChild(playeransweredEle);
+                        await sleep(800);
+                    }
+
+                    await sleep(2000);
+
+                    if (key !== correctAnswer) {
+                        answerEle.classList.add("tosh");
+                        let tosherEle = document.createElement("div");
+                        tosherEle.classList.add("tosher")
+                        tosherEle.textContent = fakeAuthor + "'s tosh!";
+                        answerEle.appendChild(tosherEle);
+                        await sleep(5000);
+                        answerEle.classList.remove("active");
+                        await sleep(500);
+                    } else {
+                        answerEle.classList.add("correct");
+                    }
+                }
+
+                getAnswer(correctAnswer).classList.add("correct");
+                getAnswer(correctAnswer).classList.add("active");
+
+                markNonCorrectAnswersAsTosh(correctAnswer);
+
+                await sleep(5000);
+
+                socket.send(JSON.stringify({
+                    type: "displayanswerfinished",
+                }));
+            })();
+
+            for (const element of document.getElementById("answers").children) {
+                if (element.innerHTML === message.correctAnswer) {
+                    element.classList.add("correct");
+                }
+            }
+        }
+
+        function markNonCorrectAnswersAsTosh(correctAnswer) {
+            for (let element of document.getElementById("answers").children) {
+                if (element.getElementsByClassName("answertext").item(0).textContent !== correctAnswer) {
+                    element.classList.add("tosh");
+                }
+            }
+        }
+
+        function getAnswer(text) {
+            for (let element of document.getElementById("answers").children) {
+                if (element.getElementsByClassName("answertext").item(0).textContent === text) {
+                    return element;
+                }
+            }
+        }
+
+        function startTimer(ms) {
+            let progress = document.getElementById("progress");
+            progress.style.animationDuration = ms + "ms";
+            progress.classList.remove("progress");
+            void progress.offsetWidth;
+            progress.classList.add("progress")
+        }
+
+        function cancelTimer() {
+            progress.classList.remove("progress");
+        }
+
     </script>
 </head>
 <body>
-<div class="fakeanswertime" id="fakeanswertime" style="display: none;">
-    Enter your fake answers now!
+<div class="meter">
+    <div class="progress" id="progress"></div>
 </div>
 
 <div class="question" id="question"></div>
-<div id="answers">
 
+<div class="fakeanswertime" id="fakeanswertime" style="display: none;">
+    Enter your tosh now!
 </div>
+
+<div id="answers"></div>
 <div class="results" id="results" style="display: none;">
     <h1>Results</h1>
     <div class="scores" id="scores">

@@ -1,19 +1,19 @@
-package com.github.berry120.wikiquiz.model;
+package com.github.berry120.wikiquiz.service;
 
-import com.github.berry120.wikiquiz.service.RandomIdGenerator;
-import com.github.berry120.wikiquiz.service.RedisService;
+import com.github.berry120.wikiquiz.model.Player;
+import com.github.berry120.wikiquiz.model.Quiz;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Map;
 
 @ApplicationScoped
-public class QuizState {
+public class QuizStateService {
 
     private final RandomIdGenerator idGenerator;
     private final RedisService redisService;
 
     @Inject
-    QuizState(RandomIdGenerator idGenerator, RedisService redisService) {
+    QuizStateService(RandomIdGenerator idGenerator, RedisService redisService) {
         this.idGenerator = idGenerator;
         this.redisService = redisService;
     }
@@ -26,7 +26,7 @@ public class QuizState {
         return redisService.quizExists(quizId);
     }
 
-    public void createQuiz(Quiz quiz) {
+    public void registerQuiz(Quiz quiz) {
         redisService.storeQuiz(quiz);
     }
 

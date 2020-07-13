@@ -15,6 +15,7 @@ import com.github.berry120.wikiquiz.redis.RedisKey;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -28,6 +29,13 @@ public class RedisService {
     private final ObjectMapper mapper;
     private StatefulRedisConnection<String, String> connection;
 
+    @ConfigProperty(name = "redis.host")
+    String redisHost;
+    @ConfigProperty(name = "redis.pwd")
+    String redisPwd;
+    @ConfigProperty(name = "redis.port")
+    String redisPort;
+
     @Inject
     public RedisService() {
         mapper = new ObjectMapper();
@@ -35,7 +43,7 @@ public class RedisService {
 
     public void connect() {
         if (connection == null || !connection.isOpen()) {
-            RedisClient client = null;
+            RedisClient client = RedisClient.create("redis://" + redisPwd + "@" + redisHost + ":" + redisPort);
             connection = client.connect();
         }
     }

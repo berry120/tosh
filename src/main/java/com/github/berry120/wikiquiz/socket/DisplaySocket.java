@@ -2,7 +2,7 @@ package com.github.berry120.wikiquiz.socket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.model.client.ClientObject;
-import com.github.berry120.wikiquiz.service.QuizService;
+import com.github.berry120.wikiquiz.service.QuizRunnerService;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -19,13 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @ServerEndpoint(value = "/socket/display/{quizid}", encoders = JacksonEncoder.class)
 public class DisplaySocket {
 
-    private final QuizService quizService;
+    private final QuizRunnerService quizRunnerService;
     private final Map<String, Session> sessions;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public DisplaySocket(QuizService quizService) {
-        this.quizService = quizService;
+    public DisplaySocket(QuizRunnerService quizRunnerService) {
+        this.quizRunnerService = quizRunnerService;
         sessions = new ConcurrentHashMap<>();
         objectMapper = new ObjectMapper();
     }
@@ -48,7 +48,7 @@ public class DisplaySocket {
     @OnOpen
     public void onOpen(Session session, @PathParam("quizid") String quizid) {
         sessions.put(quizid, session);
-        quizService.startQuiz(quizid);
+        quizRunnerService.startQuiz(quizid);
     }
 
     @OnMessage
@@ -59,13 +59,13 @@ public class DisplaySocket {
 
             switch (message.getType()) {
                 case "questionfinished":
-                    quizService.sendResultsStage(quizid);
+                    quizRunnerService.sendResultsStage(quizid);
                     break;
                 case "displayanswerfinished":
-                    quizService.nextQuestionOrFinish(quizid);
+                    quizRunnerService.nextQuestionOrFinish(quizid);
                     break;
                 case "fakeanswerfinished":
-                    quizService.sendQuestionStage(quizid);
+                    quizRunnerService.sendQuestionStage(quizid);
                     break;
             }
         } catch (IOException ex) {

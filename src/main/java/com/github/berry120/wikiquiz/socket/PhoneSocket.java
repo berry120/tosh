@@ -2,7 +2,7 @@ package com.github.berry120.wikiquiz.socket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.model.client.ClientObject;
-import com.github.berry120.wikiquiz.service.QuizService;
+import com.github.berry120.wikiquiz.service.QuizRunnerService;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -22,13 +22,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @ServerEndpoint(value = "/socket/phone/{quizid}/{personid}", encoders = JacksonEncoder.class)
 public class PhoneSocket {
 
-    private final QuizService quizService;
+    private final QuizRunnerService quizRunnerService;
     private final Map<String, List<Session>> sessions;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public PhoneSocket(QuizService quizService) {
-        this.quizService = quizService;
+    public PhoneSocket(QuizRunnerService quizRunnerService) {
+        this.quizRunnerService = quizRunnerService;
         sessions = new ConcurrentHashMap<>();
         objectMapper = new ObjectMapper();
     }
@@ -69,9 +69,9 @@ public class PhoneSocket {
             PhoneSocketMessage message = objectMapper.readValue(rawMessage, PhoneSocketMessage.class);
             System.out.println(quizid + " - " + personid + " - " + message);
             if (message.getType().equals("fakeanswer")) {
-                quizService.addFakeAnswer(quizid, personid, message.getAnswer());
+                quizRunnerService.addFakeAnswer(quizid, personid, message.getAnswer());
             } else if (message.getType().equals("answer")) {
-                quizService.addAnswer(quizid, personid, message.getAnswer());
+                quizRunnerService.addAnswer(quizid, personid, message.getAnswer());
             } else {
                 throw new RuntimeException("Unknown type");
             }

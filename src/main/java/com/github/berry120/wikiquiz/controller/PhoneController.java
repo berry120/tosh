@@ -2,7 +2,7 @@ package com.github.berry120.wikiquiz.controller;
 
 import com.github.berry120.wikiquiz.model.PlayerParameters;
 import com.github.berry120.wikiquiz.model.QuizQuestion;
-import com.github.berry120.wikiquiz.service.QuizService;
+import com.github.berry120.wikiquiz.service.QuizRunnerService;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
@@ -18,13 +18,13 @@ import java.util.stream.Collectors;
 @Path("/phone")
 public class PhoneController {
 
-    private final QuizService quizService;
+    private final QuizRunnerService quizRunnerService;
     private final Template phonestart;
     private final Template phonequiz;
 
     @Inject
-    PhoneController(QuizService quizService, Template phonestart, Template phonequiz) {
-        this.quizService = quizService;
+    PhoneController(QuizRunnerService quizRunnerService, Template phonestart, Template phonequiz) {
+        this.quizRunnerService = quizRunnerService;
         this.phonestart = phonestart;
         this.phonequiz = phonequiz;
     }
@@ -35,7 +35,7 @@ public class PhoneController {
     public TemplateInstance phoneStart(@PathParam String quizId) {
         return phonestart
                 .data("quizid", quizId)
-                .data("questions", quizService.getQuiz(quizId).getQuestions().stream()
+                .data("questions", quizRunnerService.getQuiz(quizId).getQuestions().stream()
                         .map(QuizQuestion::getQuestion).collect(Collectors.toList()));
     }
 
@@ -53,7 +53,7 @@ public class PhoneController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String registerPerson(@PathParam String quizId, PlayerParameters playerParameters) {
-        return quizService.addPlayer(quizId, playerParameters.getPlayerName());
+        return quizRunnerService.addPlayer(quizId, playerParameters.getPlayerName());
     }
 
 }
