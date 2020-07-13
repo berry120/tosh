@@ -87,6 +87,11 @@ public class QuizRunnerService {
         Quiz quiz = quizStateService.getQuiz(quizId);
         QuizQuestion question = quiz.getQuestions().get(quizStateService.getQuestionNumber(quizId));
         List<String> questionOptions = new ArrayList<>(quizStateService.getFakeAnswers(quizId).values());
+        for (String sampleWrongAnswer : question.getSampleWrongAnswers()) {
+            if (questionOptions.size() < 3) {
+                questionOptions.add(sampleWrongAnswer);
+            }
+        }
         questionOptions.add(question.getCorrectAnswer());
 
         ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), questionOptions);
