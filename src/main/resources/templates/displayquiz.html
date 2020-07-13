@@ -8,6 +8,8 @@
     <link href="/css/style.css" rel="stylesheet" type="text/css">
     <link href="/css/displayquiz.css" rel="stylesheet" type="text/css">
     <script>
+        const sleep = m => new Promise(r => setTimeout(r, m));
+
         let answeredIdx = 0;
         let answeredAudio = [
             new Audio('/audio/answered/1.mp3'),
@@ -22,14 +24,13 @@
         let correctAudio = new Audio('/audio/correct.mp3');
         let incorrectAudio = new Audio('/audio/incorrect.mp3');
 
-        const sleep = m => new Promise(r => setTimeout(r, m));
-
         const TIME_TO_PROVIDE_FAKE_ANSWERS = 30000;
         const TIME_TO_PICK_ANSWERS = 10000;
 
         let currentQuestion;
         let socket = new WebSocket("ws://" + location.host + "/socket/display/{quizid}");
         let nextEvent;
+        let answerIdxs = [];
 
         socket.onmessage = function (m) {
             console.log("Got message: " + m.data);
@@ -117,7 +118,13 @@
         }
 
         function displayAnswers(message) {
+            if (answerIdxs.includes(message.questionIdx)) {
+                return;
+            }
+            answerIdxs.push(message.questionIdx);
+
             cancelTimer();
+
             (async () => {
                 let correctAnswer = message.correctAnswer;
                 document.getElementById("question").textContent = currentQuestion;

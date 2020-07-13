@@ -103,9 +103,11 @@ public class QuizRunnerService {
     public void sendResultsStage(String quizId) {
         quizStateService.updateScores(quizId);
 
-        QuizQuestion question = quizStateService.getQuiz(quizId).getQuestions().get(quizStateService.getQuestionNumber(quizId));
+        int questionIdx = quizStateService.getQuestionNumber(quizId);
+        QuizQuestion question = quizStateService.getQuiz(quizId).getQuestions().get(questionIdx);
 
         ClientAnswer clientAnswer = new ClientAnswer(question.getCorrectAnswer(),
+                questionIdx,
                 answerTransformer.answersToClientFormat(quizStateService.getAnswers(quizId)),
                 answerTransformer.answersToClientFormat(quizStateService.getFakeAnswers(quizId)),
                 quizStateService.getScores(quizId));
