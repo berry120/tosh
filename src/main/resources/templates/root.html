@@ -59,19 +59,19 @@
         function showTutorial() {
             (async () => {
 
-                // document.getElementById("game-expl").style.display = "none";
-                // document.getElementById("players").style.display = "none";
-                // document.getElementById("want-in").style.display = "none";
-                // document.getElementById("start-link").style.display = "none";
-                // document.getElementById("dev-only").style.display = "none";
-                // document.getElementById("qrcontainer").style.display = "none";
-                // document.getElementById("tutorial").style.display = "";
-                //
-                // for (let ele of document.getElementById("tutorial").children) {
-                //     ele.classList.add("active");
-                //     await sleep(ele.getAttribute("data-timeout"));
-                //     ele.classList.remove("active");
-                // }
+                document.getElementById("game-expl").style.display = "none";
+                document.getElementById("players").style.display = "none";
+                document.getElementById("want-in").style.display = "none";
+                document.getElementById("start-link").style.display = "none";
+                document.getElementById("dev-only").style.display = "none";
+                document.getElementById("qrcontainer").style.display = "none";
+                document.getElementById("tutorial").style.display = "";
+
+                for (let ele of document.getElementById("tutorial").children) {
+                    ele.classList.add("active");
+                    await sleep(ele.getAttribute("data-timeout"));
+                    ele.classList.remove("active");
+                }
 
                 window.location.href = "/display/{quizid}";
 
