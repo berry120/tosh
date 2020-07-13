@@ -11,11 +11,13 @@ public class QuizStateService {
 
     private final RandomIdGenerator idGenerator;
     private final RedisService redisService;
+    private final ScoreCalculatorService scoreCalculatorService;
 
     @Inject
-    QuizStateService(RandomIdGenerator idGenerator, RedisService redisService) {
+    QuizStateService(RandomIdGenerator idGenerator, RedisService redisService, ScoreCalculatorService scoreCalculatorService) {
         this.idGenerator = idGenerator;
         this.redisService = redisService;
+        this.scoreCalculatorService = scoreCalculatorService;
     }
 
     public Quiz getQuiz(String quizId) {
@@ -77,24 +79,11 @@ public class QuizStateService {
 
     public void updateScores(String quizId) {
         String correctAnswer = getQuiz(quizId).getQuestions().get(redisService.retrieveQuestionNumber(quizId)).getCorrectAnswer();
-        Map<Player, String> fakeAnswers = redisService.retrieveFakeAnswers(quizId);
         Map<Player, String> answers = redisService.retrieveAnswers(quizId);
+        Map<Player, String> fakeAnswers = redisService.retrieveFakeAnswers(quizId);
 
-        //40 points for someone guessing your fake answer, 100 points for a correct answer
-        //TODO calculation in separate class
-        for (Player player : redisService.retrieveAllPlayers(quizId).values()) {
-            int score = 0;
-            if (correctAnswer.equals(answers.get(player))) {
-                score += 100;
-            }
-            String playersFakeAnswer = fakeAnswers.get(player);
-            for (Map.Entry<Player, String> answer : answers.entrySet()) {
-                if (!answer.getKey().equals(player) && answer.getValue().equals(playersFakeAnswer)) {
-                    score += 40;
-                }
-            }
-            redisService.addToScore(quizId, player.getId(), score);
-        }
+        scoreCalculatorService.getScores(correctAnswer, answers, fakeAnswers)
+                .forEach((player, score) -> redisService.addToScore(quizId, player.getId(), score));
     }
 
     public Map<Player, Integer> getScores(String quizId) {
