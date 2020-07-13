@@ -2,7 +2,7 @@ package com.github.berry120.wikiquiz.service;
 
 import com.github.berry120.wikiquiz.model.Quiz;
 import com.github.berry120.wikiquiz.model.QuizQuestion;
-import com.github.berry120.wikiquiz.opentdb.service.OpenTdbService;
+import com.github.berry120.wikiquiz.opentdb.OpenTdbService;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.stream.Collectors;

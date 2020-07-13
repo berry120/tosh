@@ -1,8 +1,7 @@
-package com.github.berry120.wikiquiz.opentdb.service;
+package com.github.berry120.wikiquiz.opentdb;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.berry120.wikiquiz.opentdb.OpenTdbRequest;
 import com.github.berry120.wikiquiz.opentdb.model.Difficulty;
 import com.github.berry120.wikiquiz.opentdb.model.Question;
 import com.github.berry120.wikiquiz.opentdb.model.QuestionResult;
