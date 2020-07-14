@@ -8,7 +8,6 @@ import com.github.berry120.wikiquiz.util.JacksonEncoder;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
@@ -69,12 +68,12 @@ public class PhoneSocket {
         sessions.get(quizid).add(session);
     }
 
-    @OnClose
-    public void onClose(Session session, @PathParam("quizid") String quizid, @PathParam("playerDetails") String playerDetailsB64) {
-        PlayerDetails playerDetails = b64JsonToObject(playerDetailsB64, PlayerDetails.class);
-        sessions.get(quizid).remove(session);
-        quizRunnerService.removePlayer(quizid, playerDetails);
-    }
+//    @OnClose
+//    public void onClose(Session session, @PathParam("quizid") String quizid, @PathParam("playerDetails") String playerDetailsB64) {
+//        PlayerDetails playerDetails = b64JsonToObject(playerDetailsB64, PlayerDetails.class);
+//        sessions.get(quizid).remove(session);
+//        quizRunnerService.removePlayer(quizid, playerDetails);
+//    }
 
     @OnMessage
     public void onMessage(String rawMessage, @PathParam("quizid") String quizid, @PathParam("playerDetails") String playerDetailsB64) {
