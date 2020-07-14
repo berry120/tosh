@@ -39,6 +39,7 @@ public class OpenTdbService {
                         .build())
                 .stream()
                 .filter(q -> !q.getQuestion().contains("of these"))
+                .filter(q -> !q.getQuestion().contains("not say"))
                 .limit(10)
                 .collect(Collectors.toList());
     }
