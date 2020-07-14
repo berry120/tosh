@@ -113,14 +113,12 @@
         }
 
         window.onload = function () {
-            {
-                #for
-                player in players
-            }
+            //@formatter:off
+            {#for player in players}
             addPlayer("{player}");
-            {
-                /for}
-            }
+            {/for}
+            //@formatter:off
+        }
 
     </script>
 </head>
@@ -150,11 +148,11 @@
     <!--        fool.-->
     <!--    </div>-->
     <!--    <div data-timeout="5000">Let's get going!</div>-->
-    <!--    <div data-timeout="1000">First question coming up in... 5</div>-->
-    <!--    <div data-timeout="1000">First question coming up in... 4</div>-->
-    <!--    <div data-timeout="1000">First question coming up in... 3</div>-->
-    <!--    <div data-timeout="1000">First question coming up in... 2</div>-->
-    <!--    <div data-timeout="1000">First question coming up in... 1</div>-->
+        <div data-timeout="1000">First question coming up in... 5</div>
+        <div data-timeout="1000">First question coming up in... 4</div>
+        <div data-timeout="1000">First question coming up in... 3</div>
+        <div data-timeout="1000">First question coming up in... 2</div>
+        <div data-timeout="1000">First question coming up in... 1</div>
 </div>
 </body>
 </html>
