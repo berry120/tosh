@@ -2,13 +2,14 @@ package com.github.berry120.wikiquiz.redis;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.berry120.wikiquiz.model.Quiz;
+import com.github.berry120.wikiquiz.model.QuizState;
 import com.github.berry120.wikiquiz.model.client.PlayerDetails;
 import com.github.berry120.wikiquiz.redis.model.AnswerKey;
 import com.github.berry120.wikiquiz.redis.model.FakeAnswerKey;
 import com.github.berry120.wikiquiz.redis.model.PlayerKey;
 import com.github.berry120.wikiquiz.redis.model.PlayerScoreKey;
-import com.github.berry120.wikiquiz.redis.model.QuestionNumberKey;
 import com.github.berry120.wikiquiz.redis.model.QuizKey;
+import com.github.berry120.wikiquiz.redis.model.QuizStateKey;
 import com.github.berry120.wikiquiz.service.ScoreCalculatorService;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -108,19 +109,19 @@ public class RedisRepository {
 
     public void updateScores(String quizId) {
         scoreCalculatorService.getScores(
-                retrieveQuiz(quizId).getQuestions().get(retrieveQuestionNumber(quizId)).getCorrectAnswer(),
+                retrieveQuiz(quizId).getQuestions().get(retrieveQuizState(quizId).getQuestionNumber()).getCorrectAnswer(),
                 retrieveAnswers(quizId),
                 retrieveFakeAnswers(quizId)
         ).forEach((player, score) -> addToScore(quizId, player, score));
     }
 
-    public int retrieveQuestionNumber(String quizId) {
-        return redisOps.get(new QuestionNumberKey(quizId), new TypeReference<Integer>() {}).orElse(-1);
+    public QuizState retrieveQuizState(String quizId) {
+        return redisOps.get(new QuizStateKey(quizId), new TypeReference<QuizState>() {}).orElse(QuizState.INITIAL);
     }
 
-    public void storeQuestionNumber(String quizId, int questionNumber) {
-        QuestionNumberKey key = new QuestionNumberKey(quizId);
-        redisOps.set(key, questionNumber);
+    public void storeQuizState(String quizId, QuizState quizState) {
+        QuizStateKey key = new QuizStateKey(quizId);
+        redisOps.set(key, quizState);
     }
 
     public void addToScore(String quizId, PlayerDetails playerDetails, int scoreToAdd) {
