@@ -2,7 +2,9 @@ package com.github.berry120.wikiquiz.socket;
 
 import com.github.berry120.wikiquiz.model.client.ClientObject;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.websocket.OnClose;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
@@ -36,21 +38,27 @@ public class RootSocket {
                 );
     }
 
-    public void close(String quizid) {
-        sessions.getOrDefault(quizid, Collections.emptyList()).forEach(session -> {
+    @PreDestroy
+    public void closeAll() {
+        sessions.values().forEach(list -> list.forEach(session -> {
                     try {
                         session.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
-        );
+        ));
     }
 
     @OnOpen
     public void onOpen(Session session, @PathParam("quizid") String quizid) {
         sessions.putIfAbsent(quizid, new ArrayList<>());
         sessions.get(quizid).add(session);
+    }
+
+    @OnClose
+    public void onClose(Session session, @PathParam("quizid") String quizid) {
+        sessions.getOrDefault(quizid, new ArrayList<>()).remove(session);
     }
 
 }

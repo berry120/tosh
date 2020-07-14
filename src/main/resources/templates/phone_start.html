@@ -25,8 +25,11 @@
 
         function register() {
             document.getElementById("registerButton").disabled = true;
-            let registry = {};
-            registry.playerName = document.getElementById("nameInput").value;
+            let createPlayerRequest = {
+                name: document.getElementById("nameInput").value,
+                secret: generateRandomSecret()
+            };
+            let createPlayerRequestB64 = btoa(JSON.stringify(createPlayerRequest));
 
             fetch(location.protocol + "//" + location.host + "/phone/{quizid}/register", {
                 method: 'post',
@@ -34,11 +37,17 @@
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(registry)
+                body: JSON.stringify(createPlayerRequest)
             }).then(function (response) {
                 return response.text();
             }).then(function (text) {
-                window.location.href = "http://" + location.host + "/phone/{quizid}/" + text;
+                if (text === 'true') {
+                    window.location.href = "http://" + location.host + "/phone/{quizid}/" + createPlayerRequestB64;
+                } else {
+                    document.getElementById("nameInputLabel").textContent = "Sorry, '" + playerName + "' is already in this quiz. You'll have to call yourself something else.";
+                    document.getElementById("nameInput").value = "";
+                    document.getElementById("registerButton").disabled = true;
+                }
             });
         }
 
@@ -46,12 +55,24 @@
             document.getElementById("registerButton").disabled = document.getElementById("nameInput").value.length === 0;
         }
 
+        function generateRandomSecret() {
+            let secureLength = 20;
+            let charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            let values = new Uint32Array(secureLength);
+            let result = "";
+            values = window.crypto.getRandomValues(values);
+            for (let i = 0; i < secureLength; i++) {
+                result += charset[values[i] % charset.length];
+            }
+            return result;
+        }
+
     </script>
 </head>
 <body>
 <div>
     <p>Almost in!</p>
-    <label for="nameInput">Who are you, anyway?</label>
+    <label for="nameInput" id="nameInputLabel">Who are you, anyway?</label>
 </div>
 <input id="nameInput" maxlength="30" oninput="checkLength();">
 <button disabled id="registerButton" onclick="register();">That's me</button>

@@ -5,9 +5,11 @@ import com.github.berry120.wikiquiz.model.QuizQuestion;
 import com.github.berry120.wikiquiz.model.client.ClientAnswer;
 import com.github.berry120.wikiquiz.model.client.ClientFakeAnswerRequest;
 import com.github.berry120.wikiquiz.model.client.ClientPlayerJoined;
+import com.github.berry120.wikiquiz.model.client.ClientPlayerRemoved;
 import com.github.berry120.wikiquiz.model.client.ClientQuestion;
 import com.github.berry120.wikiquiz.model.client.ClientResult;
 import com.github.berry120.wikiquiz.model.client.ClientScore;
+import com.github.berry120.wikiquiz.model.client.PlayerDetails;
 import com.github.berry120.wikiquiz.redis.RedisRepository;
 import com.github.berry120.wikiquiz.socket.DisplaySocket;
 import com.github.berry120.wikiquiz.socket.PhoneSocket;
@@ -15,6 +17,7 @@ import com.github.berry120.wikiquiz.socket.RootSocket;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,15 +47,15 @@ public class QuizRunnerService {
         return redisRepository.quizExists(quizId);
     }
 
-    public void addFakeAnswer(String quizId, String playerId, String fakeAnswer) {
-        redisRepository.storeFakeAnswer(quizId, playerId, fakeAnswer);
+    public void addFakeAnswer(String quizId, PlayerDetails playerDetails, String fakeAnswer) {
+        redisRepository.storeFakeAnswer(quizId, playerDetails, fakeAnswer);
         if (redisRepository.haveAllFakeAnswers(quizId)) {
             sendQuestionStage(quizId);
         }
     }
 
-    public void addAnswer(String quizId, String playerId, String answer) {
-        redisRepository.storeAnswer(quizId, playerId, answer);
+    public void addAnswer(String quizId, PlayerDetails playerDetails, String answer) {
+        redisRepository.storeAnswer(quizId, playerDetails, answer);
         if (redisRepository.haveAllAnswers(quizId)) {
             sendResultsStage(quizId);
         }
@@ -103,11 +106,15 @@ public class QuizRunnerService {
         int questionIdx = redisRepository.retrieveQuestionNumber(quizId);
         QuizQuestion question = redisRepository.retrieveQuiz(quizId).getQuestions().get(questionIdx);
 
-        ClientAnswer clientAnswer = new ClientAnswer(question.getCorrectAnswer(),
+        ClientAnswer clientAnswer = new ClientAnswer(
+                question.getCorrectAnswer(),
                 questionIdx,
-                answerTransformer.answersToClientFormat(redisRepository.retrieveAnswers(quizId)),
-                answerTransformer.answersToClientFormat(redisRepository.retrieveFakeAnswers(quizId)),
-                redisRepository.retrieveScores(quizId));
+                answerTransformer.answersToClientFormat(redisRepository.retrieveAnswers(quizId).entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().getName(), Map.Entry::getValue))),
+                answerTransformer.answersToClientFormat(redisRepository.retrieveFakeAnswers(quizId).entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().getName(), Map.Entry::getValue))),
+                redisRepository.retrieveScores(quizId)
+        );
 
         displaySocket.sendObject(quizId, clientAnswer);
         phoneSocket.sendObject(quizId, clientAnswer);
@@ -116,19 +123,24 @@ public class QuizRunnerService {
     private void sendFinalScoreStage(String quizId) {
         ClientResult clientResult = new ClientResult(redisRepository.retrieveScores(quizId)
                 .entrySet().stream()
-                .map(e -> new ClientScore(e.getKey().getName(), e.getValue()))
+                .map(e -> new ClientScore(e.getKey(), e.getValue()))
                 .collect(Collectors.toList()));
 
         displaySocket.sendObject(quizId, clientResult);
         phoneSocket.sendObject(quizId, clientResult);
     }
 
-    public String addPlayer(String quizId, String playerName) {
-        String id = redisRepository.registerPlayer(quizId, playerName);
-        ClientPlayerJoined clientPlayerJoined = new ClientPlayerJoined(playerName);
-        rootSocket.sendObject(quizId, clientPlayerJoined);
+    public boolean addPlayer(String quizId, PlayerDetails playerDetails) {
+        boolean storedOk = redisRepository.storePlayer(quizId, playerDetails);
+        if (storedOk) {
+            rootSocket.sendObject(quizId, new ClientPlayerJoined(playerDetails.getName()));
+        }
+        return storedOk;
+    }
 
-        return id;
+    public void removePlayer(String quizId, PlayerDetails playerDetails) {
+        redisRepository.removePlayer(quizId, playerDetails);
+        rootSocket.sendObject(quizId, new ClientPlayerRemoved(playerDetails.getName()));
     }
 
 }

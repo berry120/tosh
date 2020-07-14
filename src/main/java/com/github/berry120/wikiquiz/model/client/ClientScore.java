@@ -7,6 +7,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class ClientScore {
 
-    private String name;
+    private String playerName;
     private int score;
 }

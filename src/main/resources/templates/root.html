@@ -16,6 +16,7 @@
     <script>
         const sleep = m => new Promise(r => setTimeout(r, m));
 
+        let popAudio = new Audio('/audio/pop.mp3');
         let backgroundAudio = new Audio('/audio/background_loop.mp3');
         backgroundAudio.loop = true;
 
@@ -38,22 +39,55 @@
 
             let message = JSON.parse(m.data);
             if (message.type === "player_joined") {
-                joinedAudio[joinedIdx].play();
-                joinedIdx = (joinedIdx + 1) % joinedAudio.length;
-
-                document.getElementById("game-expl").style.display = "none";
-
-                let playerEle = document.createElement("span");
-                playerEle.textContent = message.playerName;
-                playerEle.classList.add("player");
-                document.getElementById("players").appendChild(playerEle);
-
-                if (document.getElementById("players").childElementCount >= 2) {
-                    document.getElementById("want-in").style.display = "none";
-                    document.getElementById("start-link").style.display = "";
-                }
+                addPlayer(message.playerName);
+            } else if (message.type === "player_removed") {
+                removePlayer(message.playerName);
             }
         };
+
+        function addPlayer(playerName) {
+            joinedAudio[joinedIdx].play();
+            joinedIdx = (joinedIdx + 1) % joinedAudio.length;
+
+            let playerEle = document.createElement("span");
+            playerEle.textContent = playerName;
+            playerEle.classList.add("player");
+            document.getElementById("players").appendChild(playerEle);
+
+            checkTextEleStatus();
+        }
+
+        function removePlayer(playerName) {
+            popAudio.play();
+
+            let toRemove;
+            for (let element of document.getElementById("players").children) {
+                if (element.textContent === playerName) {
+                    toRemove = element;
+                }
+            }
+            if (toRemove) {
+                document.getElementById("players").removeChild(toRemove);
+            }
+
+            checkTextEleStatus();
+        }
+
+        function checkTextEleStatus() {
+            if (document.getElementById("players").childElementCount >= 2) {
+                document.getElementById("want-in").style.display = "none";
+                document.getElementById("start-link").style.display = "";
+            } else {
+                document.getElementById("want-in").style.display = "";
+                document.getElementById("start-link").style.display = "none";
+            }
+
+            if (document.getElementById("players").childElementCount > 0) {
+                document.getElementById("game-expl").style.display = "none";
+            } else {
+                document.getElementById("game-expl").style.display = "";
+            }
+        }
 
         function showTutorial() {
             (async () => {
@@ -77,6 +111,16 @@
 
             })();
         }
+
+        window.onload = function () {
+            {
+                #for
+                player in players
+            }
+            addPlayer("{player}");
+            {
+                /for}
+            }
 
     </script>
 </head>

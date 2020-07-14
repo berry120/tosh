@@ -59,6 +59,7 @@ public class RedisOps {
     }
 
     void set(RedisKey redisKey, Object obj) {
+        System.out.println("SETTING " + redisKey + " to " + obj);
         try {
             SetArgs args = SetArgs.Builder.ex(EXPIRY_SECONDS);
             String key = mapper.writeValueAsString(redisKey);
@@ -70,6 +71,7 @@ public class RedisOps {
     }
 
     void delete(RedisKey redisKey) {
+        System.out.println("DELETING " + redisKey);
         try {
             String key = mapper.writeValueAsString(redisKey);
             connection.sync().del(key);

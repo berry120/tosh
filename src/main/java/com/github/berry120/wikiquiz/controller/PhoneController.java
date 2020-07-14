@@ -1,6 +1,6 @@
 package com.github.berry120.wikiquiz.controller;
 
-import com.github.berry120.wikiquiz.model.PlayerParameters;
+import com.github.berry120.wikiquiz.model.client.PlayerDetails;
 import com.github.berry120.wikiquiz.service.QuizRunnerService;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
@@ -51,8 +51,8 @@ public class PhoneController {
     @Path("/{quizId}/register")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String registerPerson(@PathParam String quizId, PlayerParameters playerParameters) {
-        return quizRunnerService.addPlayer(quizId, playerParameters.getPlayerName());
+    public boolean registerPerson(@PathParam String quizId, PlayerDetails playerDetails) {
+        return quizRunnerService.addPlayer(quizId, playerDetails);
     }
 
 }
