@@ -29,14 +29,13 @@ public class RedisService {
 
     private static final long EXPIRY_SECONDS = 60 * 60 * 6; //6 hours
     private final ObjectMapper mapper;
-    private StatefulRedisConnection<String, String> connection;
-
     @ConfigProperty(name = "redis.host")
     String redisHost;
     @ConfigProperty(name = "redis.pwd")
     String redisPwd;
     @ConfigProperty(name = "redis.port")
     String redisPort;
+    private StatefulRedisConnection<String, String> connection;
 
     @Inject
     public RedisService() {
@@ -58,25 +57,21 @@ public class RedisService {
         }
     }
 
-
     public void storeQuiz(Quiz quiz) {
         System.out.println("STORING QUIZ " + quiz.getId());
         set(new QuizKey(quiz.getId()), quiz);
     }
 
     public Quiz retrieveQuiz(String quizId) {
-        return get(new QuizKey(quizId), new TypeReference<Quiz>() {
-        }).orElseThrow(() -> new RuntimeException("No quiz exists with id " + quizId));
+        return get(new QuizKey(quizId), new TypeReference<Quiz>() {}).orElseThrow(() -> new RuntimeException("No quiz exists with id " + quizId));
     }
 
     public boolean quizExists(String quizId) {
-        return get(new QuizKey(quizId), new TypeReference<Quiz>() {
-        }).isPresent();
+        return get(new QuizKey(quizId), new TypeReference<Quiz>() {}).isPresent();
     }
 
     public Map<String, Player> retrieveAllPlayers(String quizId) {
-        return get(new PlayerKey(quizId), new TypeReference<Map<String, Player>>() {
-        }).orElse(new HashMap<>());
+        return get(new PlayerKey(quizId), new TypeReference<Map<String, Player>>() {}).orElse(new HashMap<>());
     }
 
     public void storePlayer(String quizId, Player player) {
@@ -100,8 +95,7 @@ public class RedisService {
         Map<String, Player> players = retrieveAllPlayers(quizId);
         Map<Player, String> ret = new HashMap<>();
         for (Player player : players.values()) {
-            get(new AnswerKey(quizId, player.getId()), new TypeReference<String>() {
-            }).ifPresent(a -> ret.put(player, a));
+            get(new AnswerKey(quizId, player.getId()), new TypeReference<String>() {}).ifPresent(a -> ret.put(player, a));
         }
         return ret;
     }
@@ -121,15 +115,13 @@ public class RedisService {
         Map<String, Player> players = retrieveAllPlayers(quizId);
         Map<Player, String> ret = new HashMap<>();
         for (Player player : players.values()) {
-            get(new FakeAnswerKey(quizId, player.getId()), new TypeReference<String>() {
-            }).ifPresent(a -> ret.put(player, a));
+            get(new FakeAnswerKey(quizId, player.getId()), new TypeReference<String>() {}).ifPresent(a -> ret.put(player, a));
         }
         return ret;
     }
 
     public int retrieveQuestionNumber(String quizId) {
-        return get(new QuestionNumberKey(quizId), new TypeReference<Integer>() {
-        }).orElse(-1);
+        return get(new QuestionNumberKey(quizId), new TypeReference<Integer>() {}).orElse(-1);
     }
 
     public void storeQuestionNumber(String quizId, int questionNumber) {
@@ -139,8 +131,7 @@ public class RedisService {
 
     public void addToScore(String quizId, String playerId, int scoreToAdd) {
         PlayerScoreKey key = new PlayerScoreKey(quizId, playerId);
-        int currentScore = get(key, new TypeReference<Integer>() {
-        }).orElse(0);
+        int currentScore = get(key, new TypeReference<Integer>() {}).orElse(0);
         set(key, currentScore + scoreToAdd);
     }
 
@@ -148,8 +139,7 @@ public class RedisService {
         Map<String, Player> players = retrieveAllPlayers(quizId);
         Map<Player, Integer> ret = new HashMap<>();
         for (Player player : players.values()) {
-            get(new PlayerScoreKey(quizId, player.getId()), new TypeReference<Integer>() {
-            }).ifPresent(a -> ret.put(player, a));
+            get(new PlayerScoreKey(quizId, player.getId()), new TypeReference<Integer>() {}).ifPresent(a -> ret.put(player, a));
         }
         return ret;
     }
