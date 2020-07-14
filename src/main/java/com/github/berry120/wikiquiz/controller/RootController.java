@@ -1,6 +1,7 @@
 package com.github.berry120.wikiquiz.controller;
 
 import com.github.berry120.wikiquiz.model.Quiz;
+import com.github.berry120.wikiquiz.model.client.PlayerDetails;
 import com.github.berry120.wikiquiz.redis.RedisRepository;
 import com.github.berry120.wikiquiz.service.QuizCreationService;
 import com.github.berry120.wikiquiz.service.QuizRunnerService;
@@ -50,7 +51,7 @@ public class RootController {
     public Object root(@PathParam("quizid") String quizId) {
         if (quizRunnerService.quizExists(quizId)) {
             return root
-                    .data("players", redisRepository.retrievePlayers(quizId))
+                    .data("players", redisRepository.retrievePlayers(quizId).stream().map(PlayerDetails::getName))
                     .data("quizid", quizId);
         } else {
             return Response
