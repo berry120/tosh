@@ -8,6 +8,7 @@ import com.github.berry120.wikiquiz.model.client.ClientPlayerJoined;
 import com.github.berry120.wikiquiz.model.client.ClientQuestion;
 import com.github.berry120.wikiquiz.model.client.ClientResult;
 import com.github.berry120.wikiquiz.model.client.ClientScore;
+import com.github.berry120.wikiquiz.redis.RedisRepository;
 import com.github.berry120.wikiquiz.socket.DisplaySocket;
 import com.github.berry120.wikiquiz.socket.PhoneSocket;
 import com.github.berry120.wikiquiz.socket.RootSocket;
@@ -23,12 +24,12 @@ public class QuizRunnerService {
     private final DisplaySocket displaySocket;
     private final PhoneSocket phoneSocket;
     private final RootSocket rootSocket;
-    private final QuizStateService quizStateService;
+    private final RedisRepository redisRepository;
     private final AnswerTransformerService answerTransformer;
 
     @Inject
-    QuizRunnerService(QuizStateService quizStateService, DisplaySocket displaySocket, PhoneSocket phoneSocket, RootSocket rootSocket, AnswerTransformerService answerTransformer) {
-        this.quizStateService = quizStateService;
+    QuizRunnerService(RedisRepository redisRepository, DisplaySocket displaySocket, PhoneSocket phoneSocket, RootSocket rootSocket, AnswerTransformerService answerTransformer) {
+        this.redisRepository = redisRepository;
         this.displaySocket = displaySocket;
         this.phoneSocket = phoneSocket;
         this.rootSocket = rootSocket;
@@ -40,30 +41,26 @@ public class QuizRunnerService {
     }
 
     public boolean quizExists(String quizId) {
-        return quizStateService.quizExists(quizId);
-    }
-
-    public Quiz getQuiz(String quizId) {
-        return quizStateService.getQuiz(quizId);
+        return redisRepository.quizExists(quizId);
     }
 
     public void addFakeAnswer(String quizId, String playerId, String fakeAnswer) {
-        quizStateService.storeFakeAnswer(quizId, playerId, fakeAnswer);
-        if (quizStateService.haveAllFakeAnswers(quizId)) {
+        redisRepository.storeFakeAnswer(quizId, playerId, fakeAnswer);
+        if (redisRepository.haveAllFakeAnswers(quizId)) {
             sendQuestionStage(quizId);
         }
     }
 
     public void addAnswer(String quizId, String playerId, String answer) {
-        quizStateService.storeAnswer(quizId, playerId, answer);
-        if (quizStateService.haveAllAnswers(quizId)) {
+        redisRepository.storeAnswer(quizId, playerId, answer);
+        if (redisRepository.haveAllAnswers(quizId)) {
             sendResultsStage(quizId);
         }
     }
 
     public void nextQuestionOrFinish(String quizId) {
-        int questionNumber = quizStateService.getQuestionNumber(quizId);
-        if (questionNumber + 1 >= quizStateService.getQuiz(quizId).getQuestions().size()) {
+        int questionNumber = redisRepository.retrieveQuestionNumber(quizId);
+        if (questionNumber + 1 >= redisRepository.retrieveQuiz(quizId).getQuestions().size()) {
             sendFinalScoreStage(quizId);
         } else {
             sendFakeQuestionStage(quizId);
@@ -71,11 +68,11 @@ public class QuizRunnerService {
     }
 
     private void sendFakeQuestionStage(String quizId) {
-        quizStateService.removeExistingAnswers(quizId);
-        int questionNumber = quizStateService.getQuestionNumber(quizId) + 1;
-        quizStateService.setQuestionNumber(quizId, questionNumber);
+        redisRepository.removeTempQuestionData(quizId);
+        int questionNumber = redisRepository.retrieveQuestionNumber(quizId) + 1;
+        redisRepository.storeQuestionNumber(quizId, questionNumber);
 
-        Quiz quiz = quizStateService.getQuiz(quizId);
+        Quiz quiz = redisRepository.retrieveQuiz(quizId);
         String questionText = quiz.getQuestions().get(questionNumber).getQuestion();
         ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(questionText, questionNumber);
 
@@ -84,9 +81,9 @@ public class QuizRunnerService {
     }
 
     public void sendQuestionStage(String quizId) {
-        Quiz quiz = quizStateService.getQuiz(quizId);
-        QuizQuestion question = quiz.getQuestions().get(quizStateService.getQuestionNumber(quizId));
-        Set<String> questionOptions = new HashSet<>(quizStateService.getFakeAnswers(quizId).values());
+        Quiz quiz = redisRepository.retrieveQuiz(quizId);
+        QuizQuestion question = quiz.getQuestions().get(redisRepository.retrieveQuestionNumber(quizId));
+        Set<String> questionOptions = new HashSet<>(redisRepository.retrieveFakeAnswers(quizId).values());
         for (String sampleWrongAnswer : question.getSampleWrongAnswers()) {
             if (questionOptions.size() < 3) {
                 questionOptions.add(sampleWrongAnswer);
@@ -101,23 +98,23 @@ public class QuizRunnerService {
     }
 
     public void sendResultsStage(String quizId) {
-        quizStateService.updateScores(quizId);
+        redisRepository.updateScores(quizId);
 
-        int questionIdx = quizStateService.getQuestionNumber(quizId);
-        QuizQuestion question = quizStateService.getQuiz(quizId).getQuestions().get(questionIdx);
+        int questionIdx = redisRepository.retrieveQuestionNumber(quizId);
+        QuizQuestion question = redisRepository.retrieveQuiz(quizId).getQuestions().get(questionIdx);
 
         ClientAnswer clientAnswer = new ClientAnswer(question.getCorrectAnswer(),
                 questionIdx,
-                answerTransformer.answersToClientFormat(quizStateService.getAnswers(quizId)),
-                answerTransformer.answersToClientFormat(quizStateService.getFakeAnswers(quizId)),
-                quizStateService.getScores(quizId));
+                answerTransformer.answersToClientFormat(redisRepository.retrieveAnswers(quizId)),
+                answerTransformer.answersToClientFormat(redisRepository.retrieveFakeAnswers(quizId)),
+                redisRepository.retrieveScores(quizId));
 
         displaySocket.sendObject(quizId, clientAnswer);
         phoneSocket.sendObject(quizId, clientAnswer);
     }
 
     private void sendFinalScoreStage(String quizId) {
-        ClientResult clientResult = new ClientResult(quizStateService.getScores(quizId)
+        ClientResult clientResult = new ClientResult(redisRepository.retrieveScores(quizId)
                 .entrySet().stream()
                 .map(e -> new ClientScore(e.getKey().getName(), e.getValue()))
                 .collect(Collectors.toList()));
@@ -127,7 +124,7 @@ public class QuizRunnerService {
     }
 
     public String addPlayer(String quizId, String playerName) {
-        String id = quizStateService.addPlayer(quizId, playerName);
+        String id = redisRepository.registerPlayer(quizId, playerName);
         ClientPlayerJoined clientPlayerJoined = new ClientPlayerJoined(playerName);
         rootSocket.sendObject(quizId, clientPlayerJoined);
 

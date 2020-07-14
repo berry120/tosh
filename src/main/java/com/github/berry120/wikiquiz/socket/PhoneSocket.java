@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.model.client.ClientObject;
 import com.github.berry120.wikiquiz.service.QuizRunnerService;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.websocket.OnMessage;
@@ -45,7 +46,8 @@ public class PhoneSocket {
                 );
     }
 
-    public void close(String quizid) {
+    @PreDestroy
+    public void closeAll(String quizid) {
         sessions.getOrDefault(quizid, Collections.emptyList()).forEach(session -> {
                     try {
                         session.close();
@@ -60,14 +62,12 @@ public class PhoneSocket {
     public void onOpen(Session session, @PathParam("quizid") String quizid, @PathParam("personid") String personid) {
         sessions.putIfAbsent(quizid, new ArrayList<>());
         sessions.get(quizid).add(session);
-        System.out.println("Opened - " + quizid + " - " + personid);
     }
 
     @OnMessage
     public void onMessage(String rawMessage, @PathParam("quizid") String quizid, @PathParam("personid") String personid) {
         try {
             PhoneSocketMessage message = objectMapper.readValue(rawMessage, PhoneSocketMessage.class);
-            System.out.println(quizid + " - " + personid + " - " + message);
             if (message.getType().equals("fakeanswer")) {
                 quizRunnerService.addFakeAnswer(quizid, personid, message.getAnswer());
             } else if (message.getType().equals("answer")) {

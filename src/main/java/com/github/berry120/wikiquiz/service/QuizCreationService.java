@@ -3,6 +3,7 @@ package com.github.berry120.wikiquiz.service;
 import com.github.berry120.wikiquiz.model.Quiz;
 import com.github.berry120.wikiquiz.model.QuizQuestion;
 import com.github.berry120.wikiquiz.opentdb.OpenTdbService;
+import com.github.berry120.wikiquiz.redis.RedisRepository;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.stream.Collectors;
@@ -12,13 +13,13 @@ public class QuizCreationService {
 
     private final RandomIdGenerator idGenerator;
     private final OpenTdbService openTdbService;
-    private final QuizStateService quizStateService;
+    private final RedisRepository redisRepository;
 
     @Inject
-    QuizCreationService(OpenTdbService openTdbService, RandomIdGenerator idGenerator, QuizStateService quizStateService) {
+    QuizCreationService(OpenTdbService openTdbService, RandomIdGenerator idGenerator, RedisRepository redisRepository) {
         this.idGenerator = idGenerator;
         this.openTdbService = openTdbService;
-        this.quizStateService = quizStateService;
+        this.redisRepository = redisRepository;
     }
 
     public Quiz createQuiz() {
@@ -29,7 +30,7 @@ public class QuizCreationService {
                         .map(q -> new QuizQuestion(q.getQuestion(), q.getCorrectAnswer(), q.getIncorrectAnswers()))
                         .collect(Collectors.toList())
         );
-        quizStateService.registerQuiz(quiz);
+        redisRepository.storeQuiz(quiz);
         return quiz;
     }
 }

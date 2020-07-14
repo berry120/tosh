@@ -132,6 +132,10 @@
 
                 for (let key in message.answers) {
 
+                    if (!Object.prototype.hasOwnProperty.call(message.answers, key)) {
+                        continue;
+                    }
+
                     let fakeAuthorMsg = "Our tosh!";
                     if (message.fakeAnswers[key]) {
                         fakeAuthorMsg = message.fakeAnswers[key] + "'s tosh!";
