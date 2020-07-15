@@ -16,11 +16,11 @@ import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PhoneSocket {
 
     private final QuizRunnerService quizRunnerService;
-    private final Map<String, List<Session>> sessions;
+    private final Map<String, Map<PlayerDetails, Session>> sessions;
     private final ObjectMapper objectMapper;
 
     @Inject
@@ -38,8 +38,17 @@ public class PhoneSocket {
         objectMapper = new ObjectMapper();
     }
 
-    public void sendObject(String quizid, ClientObject obj) {
-        sessions.getOrDefault(quizid, Collections.emptyList())
+    public void sendObject(String quizId, ClientObject obj) {
+        sessions.getOrDefault(quizId, Collections.emptyMap())
+                .keySet()
+                .forEach(playerDetails -> sendObject(quizId, playerDetails, obj));
+    }
+
+    public void sendObject(String quizId, PlayerDetails playerDetails, ClientObject obj) {
+        Optional.ofNullable(
+                sessions.getOrDefault(quizId, Collections.emptyMap())
+                        .get(playerDetails)
+        )
                 .stream()
                 .filter(Session::isOpen)
                 .forEach(session ->
@@ -51,21 +60,30 @@ public class PhoneSocket {
     }
 
     @PreDestroy
-    public void closeAll(String quizid) {
-        sessions.getOrDefault(quizid, Collections.emptyList()).forEach(session -> {
+    public void closeAll() {
+        sessions.keySet().forEach(this::close);
+    }
+
+    public void close(String quizId) {
+        sessions.getOrDefault(quizId, Collections.emptyMap()).forEach((playerDetails, session) -> close(quizId, playerDetails));
+    }
+
+    public void close(String quizId, PlayerDetails playerDetails) {
+        Optional.ofNullable(sessions.getOrDefault(quizId, Collections.emptyMap()).get(playerDetails))
+                .ifPresent(session -> {
                     try {
                         session.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
-        );
+                });
     }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("quizid") String quizid) {
-        sessions.putIfAbsent(quizid, new ArrayList<>());
-        sessions.get(quizid).add(session);
+    public void onOpen(Session session, @PathParam("quizid") String quizid, @PathParam("playerDetails") String playerDetailsB64) {
+        PlayerDetails playerDetails = b64JsonToObject(playerDetailsB64, PlayerDetails.class);
+        sessions.putIfAbsent(quizid, new HashMap<>());
+        sessions.get(quizid).put(playerDetails, session);
     }
 
 //    @OnClose
@@ -79,12 +97,18 @@ public class PhoneSocket {
     public void onMessage(String rawMessage, @PathParam("quizid") String quizid, @PathParam("playerDetails") String playerDetailsB64) {
         PlayerDetails playerDetails = b64JsonToObject(playerDetailsB64, PlayerDetails.class);
         PhoneSocketMessage message = jsonToObject(rawMessage, PhoneSocketMessage.class);
-        if (message.getType().equals("fakeanswer")) {
-            quizRunnerService.addFakeAnswer(quizid, playerDetails, message.getAnswer());
-        } else if (message.getType().equals("answer")) {
-            quizRunnerService.addAnswer(quizid, playerDetails, message.getAnswer());
-        } else {
-            throw new RuntimeException("Unknown type");
+        switch (message.getType()) {
+            case "fakeanswer":
+                quizRunnerService.addFakeAnswer(quizid, playerDetails, message.getAnswer());
+                break;
+            case "answer":
+                quizRunnerService.addAnswer(quizid, playerDetails, message.getAnswer());
+                break;
+            case "reload":
+                quizRunnerService.resendPhoneStatus(quizid, playerDetails);
+                break;
+            default:
+                throw new RuntimeException("Unknown type");
         }
     }
 

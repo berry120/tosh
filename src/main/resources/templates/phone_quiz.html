@@ -80,6 +80,30 @@
             document.getElementById("fakesubmissionbutton").disabled = document.getElementById("fakesubmissionanswer").value.length === 0;
         }
 
+        function waitForSocketConnection(callback) {
+            setTimeout(
+                function () {
+                    if (socket.readyState === 1) {
+                        console.log("Connection is made")
+                        if (callback != null) {
+                            callback();
+                        }
+                    } else {
+                        console.log("wait for connection...")
+                        waitForSocketConnection(socket, callback);
+                    }
+
+                }, 50);
+        }
+
+        window.onload = function () {
+            waitForSocketConnection(function () {
+                socket.send(JSON.stringify({
+                    type: "reload",
+                }));
+            });
+        }
+
     </script>
 </head>
 <body>

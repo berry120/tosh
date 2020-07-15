@@ -70,7 +70,7 @@ public class DisplaySocket {
                     quizRunnerService.sendQuestionStage(quizid);
                     break;
                 case "reload":
-                    quizRunnerService.resend(quizid);
+                    quizRunnerService.resendDisplayStatus(quizid);
                     break;
                 default:
                     log.error("Unhandled display socket message");

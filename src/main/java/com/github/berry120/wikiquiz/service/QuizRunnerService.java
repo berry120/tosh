@@ -66,21 +66,33 @@ public class QuizRunnerService {
         }
     }
 
-    public void resend(String quizId) {
-        System.out.println(redisRepository.retrieveQuizState(quizId));
+    public void resendDisplayStatus(String quizId) {
         QuizState quizState = redisRepository.retrieveQuizState(quizId).rewind();
-        System.out.println(quizState);
         redisRepository.storeQuizState(quizId, quizState);
 
         if (quizState.getQuestionStage() == QuestionStage.FAKE_ANSWER_SUBMISSION) {
-            System.out.println("AAAA");
             sendQuestionStage(quizId);
         } else if (quizState.getQuestionStage() == QuestionStage.PICK_ANSWER) {
-            System.out.println("BBBB");
             sendResultsStage(quizId);
         } else if (quizState.getQuestionStage() == QuestionStage.SHOW_RESULTS) {
-            System.out.println("CCCC");
             nextQuestionOrFinish(quizId);
+        }
+    }
+
+    public void resendPhoneStatus(String quizId, PlayerDetails playerDetails) {
+        Quiz quiz = redisRepository.retrieveQuiz(quizId);
+        QuizState quizState = redisRepository.retrieveQuizState(quizId);
+        QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
+
+        if (quizState.getQuestionStage() == QuestionStage.FAKE_ANSWER_SUBMISSION) {
+            ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(question.getQuestion(), quizState.getQuestionNumber());
+            phoneSocket.sendObject(quizId, playerDetails, clientFakeAnswerRequest);
+        } else if (quizState.getQuestionStage() == QuestionStage.PICK_ANSWER) {
+            ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), getQuestionOptions(quiz, question));
+            phoneSocket.sendObject(quizId, playerDetails, clientQuestion);
+        } else if (quizState.getQuestionStage() == QuestionStage.SHOW_RESULTS) {
+            ClientAnswer clientAnswer = getClientAnswer(quizState, quiz, question);
+            phoneSocket.sendObject(quizId, playerDetails, clientAnswer);
         }
     }
 
@@ -144,21 +156,25 @@ public class QuizRunnerService {
             Quiz quiz = redisRepository.retrieveQuiz(quizId);
             QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
 
-            ClientAnswer clientAnswer = new ClientAnswer(
-                    quizState.getQuestionNumber(),
-                    question.getQuestion(),
-                    question.getCorrectAnswer(),
-                    getQuestionOptions(quiz, question),
-                    answerTransformer.answersToClientFormat(redisRepository.retrieveAnswers(quizId).entrySet().stream()
-                            .collect(Collectors.toMap(e -> e.getKey().getName(), Map.Entry::getValue))),
-                    answerTransformer.answersToClientFormat(redisRepository.retrieveFakeAnswers(quizId).entrySet().stream()
-                            .collect(Collectors.toMap(e -> e.getKey().getName(), Map.Entry::getValue))),
-                    redisRepository.retrieveScores(quizId)
-            );
+            ClientAnswer clientAnswer = getClientAnswer(quizState, quiz, question);
 
             displaySocket.sendObject(quizId, clientAnswer);
             phoneSocket.sendObject(quizId, clientAnswer);
         }
+    }
+
+    private ClientAnswer getClientAnswer(QuizState quizState, Quiz quiz, QuizQuestion question) {
+        return new ClientAnswer(
+                quizState.getQuestionNumber(),
+                question.getQuestion(),
+                question.getCorrectAnswer(),
+                getQuestionOptions(quiz, question),
+                answerTransformer.answersToClientFormat(redisRepository.retrieveAnswers(quiz.getId()).entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().getName(), Map.Entry::getValue))),
+                answerTransformer.answersToClientFormat(redisRepository.retrieveFakeAnswers(quiz.getId()).entrySet().stream()
+                        .collect(Collectors.toMap(e -> e.getKey().getName(), Map.Entry::getValue))),
+                redisRepository.retrieveScores(quiz.getId())
+        );
     }
 
     private void sendFinalScoreStage(String quizId) {
