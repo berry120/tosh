@@ -108,7 +108,7 @@ public class PhoneSocket {
                 quizRunnerService.resendPhoneStatus(quizid, playerDetails);
                 break;
             default:
-                throw new RuntimeException("Unknown type");
+                throw new AssertionError("Unknown type");
         }
     }
 
