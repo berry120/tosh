@@ -1,6 +1,21 @@
-version: 2 # use CircleCI 2.0
-jobs: # a collection of steps
-  build: # runs not using Workflows must have a `build` job as entry point
+version: 2.1
+
+orbs:
+  heroku: circleci/heroku@0.0.10.
+
+workflows:
+  heroku_deploy:
+    jobs:
+      - build
+      - heroku/deploy-via-git:
+          requires:
+            - build
+          filters:
+            branches:
+              only: sequential-branch-filter
+
+jobs:
+  build:
 
     working_directory: ~/tosh
 
