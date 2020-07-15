@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.With;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -36,13 +35,7 @@ public class Question {
                     .withCorrectAnswer(URLDecoder.decode(correctAnswer, StandardCharsets.UTF_8.name()))
                     .withIncorrectAnswers(incorrectAnswers
                             .stream()
-                            .map(s -> {
-                                try {
-                                    return URLDecoder.decode(s, StandardCharsets.UTF_8.name());
-                                } catch (UnsupportedEncodingException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            })
+                            .map(s -> URLDecoder.decode(s, StandardCharsets.UTF_8))
                             .collect(Collectors.toList()));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
