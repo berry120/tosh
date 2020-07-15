@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap');
 
 .dev-only {
-    /*display: none;*/
+    display: none;
 }
 
 html {
