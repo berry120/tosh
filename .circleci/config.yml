@@ -24,10 +24,12 @@ jobs:
 
     steps:
       - checkout
+      - heroku/install
       - restore_cache:
           key: tosh-{{ checksum "pom.xml" }}
 
       - run: mvn dependency:go-offline
+      - heroku/deploy-via-git
 
       - save_cache:
           paths:
