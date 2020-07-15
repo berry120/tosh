@@ -13,9 +13,11 @@ import java.io.OutputStream;
 @ApplicationScoped
 public class QRCodeService {
 
-    @ConfigProperty(name = "hostname")
-    String hostname;
+    private final String hostname;
 
+    public QRCodeService(@ConfigProperty(name = "hostname") String hostname) {
+        this.hostname = hostname;
+    }
 
     public void generateQRCodeImage(String quizId, OutputStream outputStream) throws IOException {
         QRCodeWriter barcodeWriter = new QRCodeWriter();
