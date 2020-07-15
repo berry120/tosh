@@ -82,7 +82,7 @@ public class QuizRunnerService {
     public void resendPhoneStatus(String quizId, PlayerDetails playerDetails) {
         Quiz quiz = redisRepository.retrieveQuiz(quizId);
         QuizState quizState = redisRepository.retrieveQuizState(quizId);
-        if (quizState.isStarted()) {
+        if (quizState.getQuestionNumber() > -1) {
             QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
 
             if (quizState.getQuestionStage() == QuestionStage.FAKE_ANSWER_SUBMISSION) {
