@@ -43,27 +43,31 @@
             } else if (message.type === "answer") {
                 displayAnswers(message);
             } else if (message.type === "results") {
-                cancelTimer();
-                document.getElementById("question").textContent = "";
-                document.getElementById("answers").textContent = "";
-
-                for (const score of message.scores) {
-                    let nameEle = document.createElement("span");
-                    nameEle.classList.add("name");
-                    nameEle.textContent = score.name;
-                    let valEle = document.createElement("span");
-                    valEle.textContent = score.score;
-                    valEle.classList.add("value");
-
-                    let scoreEle = document.createElement("div");
-                    scoreEle.classList.add("score");
-                    scoreEle.appendChild(nameEle);
-                    scoreEle.appendChild(valEle);
-                    document.getElementById("scores").appendChild(scoreEle);
-                }
-                document.getElementById("results").style.display = "";
+                displayResults(message);
             }
         };
+
+        function displayResults(message) {
+            cancelTimer();
+            document.getElementById("question").textContent = "";
+            document.getElementById("answers").textContent = "";
+
+            for (const score of message.scores) {
+                let nameEle = document.createElement("span");
+                nameEle.classList.add("name");
+                nameEle.textContent = score.playerName;
+                let valEle = document.createElement("span");
+                valEle.textContent = score.score;
+                valEle.classList.add("value");
+
+                let scoreEle = document.createElement("div");
+                scoreEle.classList.add("score");
+                scoreEle.appendChild(nameEle);
+                scoreEle.appendChild(valEle);
+                document.getElementById("scores").appendChild(scoreEle);
+            }
+            document.getElementById("results").style.display = "";
+        }
 
         function displaySupplyFakeAnswer(message) {
             cancelTimer();
