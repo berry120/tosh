@@ -104,7 +104,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-openshift</artifactId>
+      <artifactId>quarkus-container-image-docker</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -132,6 +132,17 @@
           <systemPropertyVariables>
             <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
           </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.heroku.sdk</groupId>
+        <artifactId>heroku-maven-plugin</artifactId>
+        <version>3.0.3</version>
+        <configuration>
+          <jdkVersion>11</jdkVersion>
+          <processTypes>
+            <web>java -jar target/wikiquiz-1.0.0-SNAPSHOT-runner.jar</web>
+          </processTypes>
         </configuration>
       </plugin>
     </plugins>
