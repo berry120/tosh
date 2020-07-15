@@ -11,6 +11,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Optional;
 
 @ApplicationScoped
@@ -18,20 +19,23 @@ public class RedisOps {
 
     private static final long EXPIRY_SECONDS = 60 * 60 * 6; //6 hours
     private final ObjectMapper mapper;
-    @ConfigProperty(name = "redis.host")
-    String redisHost;
-    @ConfigProperty(name = "redis.pwd")
-    String redisPwd;
-    @ConfigProperty(name = "redis.port")
-    String redisPort;
+    private final String redisHost;
+    private final String redisPwd;
+    private final String redisPort;
     private StatefulRedisConnection<String, String> connection;
 
-    RedisOps() {
+    @Inject
+    public RedisOps(@ConfigProperty(name = "redis.host") String redisHost,
+                    @ConfigProperty(name = "redis.port") String redisPort,
+                    @ConfigProperty(name = "redis.pwd") String redisPwd) {
+        this.redisHost = redisHost;
+        this.redisPort = redisPort;
+        this.redisPwd = redisPwd;
         mapper = new ObjectMapper();
     }
 
     @PostConstruct
-    void connect() {
+    public void connect() {
         if (connection == null || !connection.isOpen()) {
             RedisClient client = RedisClient.create("redis://" + redisPwd + "@" + redisHost + ":" + redisPort);
             connection = client.connect();
@@ -39,13 +43,13 @@ public class RedisOps {
     }
 
     @PreDestroy
-    void close() {
+    public void close() {
         if (connection != null && connection.isOpen()) {
             connection.close();
         }
     }
 
-    <T> Optional<T> get(RedisKey redisKey, TypeReference<T> type) {
+    public <T> Optional<T> get(RedisKey redisKey, TypeReference<T> type) {
         try {
             String json = connection.sync().get(mapper.writeValueAsString(redisKey));
             if (json == null) {
@@ -58,7 +62,7 @@ public class RedisOps {
         }
     }
 
-    void set(RedisKey redisKey, Object obj) {
+    public void set(RedisKey redisKey, Object obj) {
         System.out.println("SETTING " + redisKey + " to " + obj);
         try {
             SetArgs args = SetArgs.Builder.ex(EXPIRY_SECONDS);
@@ -70,7 +74,7 @@ public class RedisOps {
         }
     }
 
-    void delete(RedisKey redisKey) {
+    public void delete(RedisKey redisKey) {
         System.out.println("DELETING " + redisKey);
         try {
             String key = mapper.writeValueAsString(redisKey);
