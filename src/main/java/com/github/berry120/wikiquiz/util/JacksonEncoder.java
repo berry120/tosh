@@ -10,20 +10,14 @@ public class JacksonEncoder implements Encoder.Text<Object> {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    /**
-     * No explicit initialisation required
-     */
     @Override
     public void init(EndpointConfig endpointConfig) {
-
+        //Deliberately empty
     }
 
-    /**
-     * No explicit destruction required
-     */
     @Override
     public void destroy() {
-
+        //Deliberately empty
     }
 
     @Override
