@@ -1,6 +1,5 @@
 package com.github.berry120.wikiquiz.opentdb;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.opentdb.model.Difficulty;
 import com.github.berry120.wikiquiz.opentdb.model.Encoding;
@@ -9,6 +8,8 @@ import com.github.berry120.wikiquiz.opentdb.model.QuestionResult;
 import com.github.berry120.wikiquiz.opentdb.model.Type;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -56,8 +57,8 @@ public class OpenTdbService {
                         try {
                             return objectMapper.readValue(r.body(), QuestionResult.class)
                                     .decodeUrl().getResults();
-                        } catch (JsonProcessingException e) {
-                            throw new RuntimeException(e);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
                         }
                     })
                     .get();
