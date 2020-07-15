@@ -37,6 +37,8 @@ jobs:
           key: circleci-demo-java-spring-{{ checksum "pom.xml" }}
 
       - run: mvn package
+
+      - setup_remote_docker
       - run: docker build -f src/main/docker/Dockerfile.jvm -t quarkus/tosh .
       - run: docker tag quarkus/tosh registry.heroku.com/shrouded-woodland-80423/web
       - run: docker push registry.heroku.com/shrouded-woodland-80423/web
