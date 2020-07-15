@@ -7,7 +7,7 @@ It seemed like a fun project, and I wanted to take [Quarkus](http://quarkus.io) 
 ## Try it
 You'll need at least two players with smartphones, and a main machine to run the display screen on. Sound good? Head here to give it a spin:
 
-[http://shrouded-woodland-80423.herokuapp.com/lukpcpygpz](http://shrouded-woodland-80423.herokuapp.com/lukpcpygpz)
+[http://shrouded-woodland-80423.herokuapp.com/](http://shrouded-woodland-80423.herokuapp.com/)
 
 *(Note that this is just a free Heroku instance built from the latest repository code, so it won't be the fastest and may not always be working / available.)*
 
