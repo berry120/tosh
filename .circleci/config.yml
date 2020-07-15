@@ -37,10 +37,17 @@ jobs:
           key: circleci-demo-java-spring-{{ checksum "pom.xml" }}
 
       - run: mvn package
+      - run:
+          name: Install Docker client
+          command: apk add docker-cli
 
       - setup_remote_docker
       - run: docker build -f src/main/docker/Dockerfile.jvm -t quarkus/tosh .
       - run: docker tag quarkus/tosh registry.heroku.com/shrouded-woodland-80423/web
+      - run:
+          name: Login into Heroku Docker Repository
+          command: |
+            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
       - run: docker push registry.heroku.com/shrouded-woodland-80423/web
       - run: heroku container:release web -a shrouded-woodland-80423
 
