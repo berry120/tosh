@@ -20,11 +20,12 @@
 @keyframes progressBar {
     0% {
         width: 100%;
-        background-color: lightgray
+        background-color: lightgray;
     }
+
     100% {
         width: 0;
-        background-color: red
+        background-color: red;
     }
 }
 
