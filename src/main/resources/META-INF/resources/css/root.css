@@ -39,24 +39,13 @@ h1 {
     font-size: 2em;
 }
 
-.start-link {
+button {
     font-family: 'Bangers', cursive;
     font-size: 1.5em;
     margin-top: 10px;
     margin-bottom: 10px;
-    padding: 5px 10px;
     border: 0.1em solid black;
-    color: black;
-    text-underline: none;
     background-color: white;
-    text-decoration: none;
-}
-
-.start-link a {
-    text-underline: none;
-    background-color: white;
-    text-decoration: none;
-    color: black;
 }
 
 .qrcontainer {
