@@ -1,18 +1,18 @@
 version: 2.1
 
-orbs:
-  heroku: circleci/heroku@1.0.1
+#orbs:
+#  heroku: circleci/heroku@1.0.1
 
-workflows:
-  heroku_deploy:
-    jobs:
-      - build
-      - heroku/deploy-via-git:
-          requires:
-            - build
-          filters:
-            branches:
-              only: sequential-branch-filter
+#workflows:
+#  heroku_deploy:
+#    jobs:
+#      - build
+#      - heroku/deploy-via-git:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only: sequential-branch-filter
 
 jobs:
   build:
@@ -29,7 +29,7 @@ jobs:
           key: tosh-{{ checksum "pom.xml" }}
 
       - run: mvn dependency:go-offline
-      - heroku/deploy-via-git
+      #      - heroku/deploy-via-git
 
       - save_cache:
           paths:
@@ -37,6 +37,10 @@ jobs:
           key: circleci-demo-java-spring-{{ checksum "pom.xml" }}
 
       - run: mvn package
+      - run: docker build -f src/main/docker/Dockerfile.jvm -t quarkus/tosh .
+      - run: docker tag quarkus/tosh registry.heroku.com/shrouded-woodland-80423/web
+      - run: docker push registry.heroku.com/shrouded-woodland-80423/web
+      - run: heroku container:release web -a shrouded-woodland-80423
 
       - store_test_results:
           path: target/surefire-reports
