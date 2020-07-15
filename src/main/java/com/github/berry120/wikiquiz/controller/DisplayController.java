@@ -1,5 +1,6 @@
 package com.github.berry120.wikiquiz.controller;
 
+import com.github.berry120.wikiquiz.redis.RedisRepository;
 import io.quarkus.qute.Template;
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.qute.api.ResourcePath;
@@ -12,10 +13,13 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/display")
 public class DisplayController {
+
+    private final RedisRepository redisRepository;
     private final Template displayQuiz;
 
     @Inject
-    DisplayController(@ResourcePath("display_quiz") Template displayQuiz) {
+    DisplayController(RedisRepository redisRepository, @ResourcePath("display_quiz") Template displayQuiz) {
+        this.redisRepository = redisRepository;
         this.displayQuiz = displayQuiz;
     }
 
@@ -24,7 +28,8 @@ public class DisplayController {
     @Produces(MediaType.TEXT_HTML)
     public TemplateInstance mainDisplay(@PathParam String quizId) {
         return displayQuiz
-                .data("quizid", quizId);
+                .data("quizid", quizId)
+                .data("initialQuestionNum", redisRepository.retrieveQuizState(quizId).getQuestionNumber());
     }
 
 }

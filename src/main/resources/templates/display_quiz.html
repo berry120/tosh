@@ -93,15 +93,7 @@
                 document.getElementById("question").textContent = "Pick your answers!";
                 document.getElementById("answers").textContent = "";
                 for (const answer of message.answers) {
-                    let answerTextEle = document.createElement("div");
-                    answerTextEle.classList.add("answertext");
-                    answerTextEle.textContent = answer;
-
-                    let answerEle = document.createElement("div");
-                    answerEle.classList.add("answer");
-                    answerEle.appendChild(answerTextEle);
-
-                    document.getElementById("answers").appendChild(answerEle);
+                    createAnswer(answer);
                 }
 
                 startTimer(TIME_TO_PICK_ANSWERS);
@@ -125,8 +117,9 @@
 
             (async () => {
                 let correctAnswer = message.correctAnswer;
-                document.getElementById("question").textContent = currentQuestion;
-                await sleep(5000);
+                document.getElementById("question").textContent = message.question;
+                ensureAnswersVisible(message.choices);
+                await sleep(4000);
 
                 for (let key in message.answers) {
 
@@ -149,7 +142,7 @@
                     answerEle.appendChild(playersansweredEle);
 
                     answeredIdx = 0;
-                    for (let idx in playersAnsweredList) {
+                    for (const playerAnswered of playersAnsweredList) {
                         answeredAudio[answeredIdx].play();
                         answeredIdx = (answeredIdx + 1);
                         if (answeredIdx >= answeredAudio.length) {
@@ -157,7 +150,7 @@
                         }
 
                         let playeransweredEle = document.createElement("span");
-                        playeransweredEle.textContent = playersAnsweredList[idx];
+                        playeransweredEle.textContent = playerAnswered;
                         playersansweredEle.appendChild(playeransweredEle);
                         await sleep(800);
                     }
@@ -219,6 +212,53 @@
 
         function cancelTimer() {
             progress.classList.remove("progress");
+        }
+
+        function waitForSocketConnection(callback) {
+            setTimeout(
+                function () {
+                    if (socket.readyState === 1) {
+                        console.log("Connection is made")
+                        if (callback != null) {
+                            callback();
+                        }
+                    } else {
+                        console.log("wait for connection...")
+                        waitForSocketConnection(socket, callback);
+                    }
+
+                }, 50);
+        }
+
+        function createAnswer(answer) {
+            let answerTextEle = document.createElement("div");
+            answerTextEle.classList.add("answertext");
+            answerTextEle.textContent = answer;
+
+            let answerEle = document.createElement("div");
+            answerEle.classList.add("answer");
+            answerEle.appendChild(answerTextEle);
+
+            document.getElementById("answers").appendChild(answerEle);
+        }
+
+        function ensureAnswersVisible(answerList) {
+            for (const answer of answerList) {
+                if (!getAnswer(answer)) {
+                    createAnswer(answer);
+                }
+            }
+        }
+
+        window.onload = function () {
+            let initialQuestionNum = {initialQuestionNum};
+            if (initialQuestionNum > -1) {
+                waitForSocketConnection(function () {
+                    socket.send(JSON.stringify({
+                        type: "reload",
+                    }));
+                });
+            }
         }
 
     </script>

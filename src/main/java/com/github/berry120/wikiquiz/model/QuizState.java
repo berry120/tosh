@@ -14,4 +14,12 @@ public class QuizState {
     private int questionNumber;
     private QuestionStage questionStage;
 
+    public QuizState rewind() {
+        int newQuestionNumber = questionNumber;
+        if (questionStage == QuestionStage.FAKE_ANSWER_SUBMISSION) {
+            newQuestionNumber--;
+        }
+        return new QuizState(newQuestionNumber, questionStage.rewind());
+    }
+
 }

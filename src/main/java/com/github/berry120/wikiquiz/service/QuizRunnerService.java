@@ -19,6 +19,7 @@ import com.github.berry120.wikiquiz.socket.RootSocket;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,7 +43,9 @@ public class QuizRunnerService {
     }
 
     public void startQuiz(String quizId) {
-        nextQuestionOrFinish(quizId);
+        if (redisRepository.retrieveQuizState(quizId).getQuestionNumber() == -1) {
+            nextQuestionOrFinish(quizId);
+        }
     }
 
     public boolean quizExists(String quizId) {
@@ -60,6 +63,24 @@ public class QuizRunnerService {
         redisRepository.storeAnswer(quizId, playerDetails, answer);
         if (redisRepository.haveAllAnswers(quizId)) {
             sendResultsStage(quizId);
+        }
+    }
+
+    public void resend(String quizId) {
+        System.out.println(redisRepository.retrieveQuizState(quizId));
+        QuizState quizState = redisRepository.retrieveQuizState(quizId).rewind();
+        System.out.println(quizState);
+        redisRepository.storeQuizState(quizId, quizState);
+
+        if (quizState.getQuestionStage() == QuestionStage.FAKE_ANSWER_SUBMISSION) {
+            System.out.println("AAAA");
+            sendQuestionStage(quizId);
+        } else if (quizState.getQuestionStage() == QuestionStage.PICK_ANSWER) {
+            System.out.println("BBBB");
+            sendResultsStage(quizId);
+        } else if (quizState.getQuestionStage() == QuestionStage.SHOW_RESULTS) {
+            System.out.println("CCCC");
+            nextQuestionOrFinish(quizId);
         }
     }
 
@@ -95,19 +116,23 @@ public class QuizRunnerService {
 
             Quiz quiz = redisRepository.retrieveQuiz(quizId);
             QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
-            Set<String> questionOptions = new HashSet<>(redisRepository.retrieveFakeAnswers(quizId).values());
-            for (String sampleWrongAnswer : question.getSampleWrongAnswers()) {
-                if (questionOptions.size() < 3) {
-                    questionOptions.add(sampleWrongAnswer);
-                }
-            }
-            questionOptions.add(question.getCorrectAnswer());
 
-            ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), questionOptions);
+            ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), getQuestionOptions(quiz, question));
 
             displaySocket.sendObject(quizId, clientQuestion);
             phoneSocket.sendObject(quizId, clientQuestion);
         }
+    }
+
+    private List<String> getQuestionOptions(Quiz quiz, QuizQuestion question) {
+        Set<String> questionOptions = new HashSet<>(redisRepository.retrieveFakeAnswers(quiz.getId()).values());
+        for (String sampleWrongAnswer : question.getSampleWrongAnswers()) {
+            if (questionOptions.size() < 3) {
+                questionOptions.add(sampleWrongAnswer);
+            }
+        }
+        questionOptions.add(question.getCorrectAnswer());
+        return questionOptions.stream().sorted().collect(Collectors.toList());
     }
 
     public void sendResultsStage(String quizId) {
@@ -116,11 +141,14 @@ public class QuizRunnerService {
             redisRepository.storeQuizState(quizId, new QuizState(quizState.getQuestionNumber(), QuestionStage.SHOW_RESULTS));
             redisRepository.updateScores(quizId);
 
-            QuizQuestion question = redisRepository.retrieveQuiz(quizId).getQuestions().get(quizState.getQuestionNumber());
+            Quiz quiz = redisRepository.retrieveQuiz(quizId);
+            QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
 
             ClientAnswer clientAnswer = new ClientAnswer(
-                    question.getCorrectAnswer(),
                     quizState.getQuestionNumber(),
+                    question.getQuestion(),
+                    question.getCorrectAnswer(),
+                    getQuestionOptions(quiz, question),
                     answerTransformer.answersToClientFormat(redisRepository.retrieveAnswers(quizId).entrySet().stream()
                             .collect(Collectors.toMap(e -> e.getKey().getName(), Map.Entry::getValue))),
                     answerTransformer.answersToClientFormat(redisRepository.retrieveFakeAnswers(quizId).entrySet().stream()

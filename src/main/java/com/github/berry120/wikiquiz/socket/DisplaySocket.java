@@ -67,6 +67,9 @@ public class DisplaySocket {
                 case "fakeanswerfinished":
                     quizRunnerService.sendQuestionStage(quizid);
                     break;
+                case "reload":
+                    quizRunnerService.resend(quizid);
+                    break;
             }
         } catch (IOException ex) {
             ex.printStackTrace();

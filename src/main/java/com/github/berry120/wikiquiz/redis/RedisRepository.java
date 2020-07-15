@@ -120,6 +120,7 @@ public class RedisRepository {
     }
 
     public void storeQuizState(String quizId, QuizState quizState) {
+        System.out.println("Changing state to: " + quizState);
         QuizStateKey key = new QuizStateKey(quizId);
         redisOps.set(key, quizState);
     }
