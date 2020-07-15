@@ -22,4 +22,8 @@ public class QuizState {
         return new QuizState(newQuestionNumber, questionStage.rewind());
     }
 
+    public boolean isStarted() {
+        return questionNumber > -1;
+    }
+
 }

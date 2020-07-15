@@ -82,17 +82,19 @@ public class QuizRunnerService {
     public void resendPhoneStatus(String quizId, PlayerDetails playerDetails) {
         Quiz quiz = redisRepository.retrieveQuiz(quizId);
         QuizState quizState = redisRepository.retrieveQuizState(quizId);
-        QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
+        if (quizState.isStarted()) {
+            QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
 
-        if (quizState.getQuestionStage() == QuestionStage.FAKE_ANSWER_SUBMISSION) {
-            ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(question.getQuestion(), quizState.getQuestionNumber());
-            phoneSocket.sendObject(quizId, playerDetails, clientFakeAnswerRequest);
-        } else if (quizState.getQuestionStage() == QuestionStage.PICK_ANSWER) {
-            ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), getQuestionOptions(quiz, question));
-            phoneSocket.sendObject(quizId, playerDetails, clientQuestion);
-        } else if (quizState.getQuestionStage() == QuestionStage.SHOW_RESULTS) {
-            ClientAnswer clientAnswer = getClientAnswer(quizState, quiz, question);
-            phoneSocket.sendObject(quizId, playerDetails, clientAnswer);
+            if (quizState.getQuestionStage() == QuestionStage.FAKE_ANSWER_SUBMISSION) {
+                ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(question.getQuestion(), quizState.getQuestionNumber());
+                phoneSocket.sendObject(quizId, playerDetails, clientFakeAnswerRequest);
+            } else if (quizState.getQuestionStage() == QuestionStage.PICK_ANSWER) {
+                ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), getQuestionOptions(quiz, question));
+                phoneSocket.sendObject(quizId, playerDetails, clientQuestion);
+            } else if (quizState.getQuestionStage() == QuestionStage.SHOW_RESULTS) {
+                ClientAnswer clientAnswer = getClientAnswer(quizState, quiz, question);
+                phoneSocket.sendObject(quizId, playerDetails, clientAnswer);
+            }
         }
     }
 
