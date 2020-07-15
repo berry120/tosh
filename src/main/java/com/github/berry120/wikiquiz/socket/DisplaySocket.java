@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.berry120.wikiquiz.model.client.ClientObject;
 import com.github.berry120.wikiquiz.service.QuizRunnerService;
 import com.github.berry120.wikiquiz.util.JacksonEncoder;
+import lombok.extern.slf4j.Slf4j;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.websocket.OnMessage;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @ApplicationScoped
 @ServerEndpoint(value = "/socket/display/{quizid}", encoders = JacksonEncoder.class)
 public class DisplaySocket {
@@ -69,6 +71,9 @@ public class DisplaySocket {
                     break;
                 case "reload":
                     quizRunnerService.resend(quizid);
+                    break;
+                default:
+                    log.error("Unhandled display socket message");
                     break;
             }
         } catch (IOException ex) {
