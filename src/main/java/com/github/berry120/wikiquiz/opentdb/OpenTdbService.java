@@ -42,7 +42,7 @@ public class OpenTdbService {
                 .filter(q -> !q.getQuestion().contains("of these"))
                 .filter(q -> !q.getQuestion().contains("not say"))
                 .filter(q -> !q.getQuestion().contains("is not"))
-                .limit(10)
+                .limit(2)
                 .collect(Collectors.toList());
     }
 

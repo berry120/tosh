@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>WikiQuiz</title>
-    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/style.css">-->
-    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/displayquiz.css">-->
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/css/style.css">-->
+    <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/css/displayquiz.css">-->
     <link href="/css/style.css" rel="stylesheet" type="text/css">
     <link href="/css/displayquiz.css" rel="stylesheet" type="text/css">
     <script>
@@ -49,23 +49,43 @@
 
         function displayResults(message) {
             cancelTimer();
+            if (message.type === "results") {
+                document.getElementById("resultintro").textContent = "Final results";
+            }
             document.getElementById("question").textContent = "";
             document.getElementById("answers").textContent = "";
+            document.getElementById("fakeanswertime").style.display = "none";
+            document.getElementById("resultstable").textContent = "";
 
-            for (const score of message.scores) {
-                let nameEle = document.createElement("span");
+            let namesEle = document.createElement("div");
+            namesEle.classList.add("names");
+            let scoresEle = document.createElement("div");
+            scoresEle.classList.add("scores");
+
+            let maxScore = 0;
+            for (const [playerName, score] of Object.entries(message.scores)) {
+                if (score > maxScore) {
+                    maxScore = score;
+                }
+            }
+
+            for (const [playerName, score] of Object.entries(message.scores)) {
+                let nameEle = document.createElement("div");
                 nameEle.classList.add("name");
-                nameEle.textContent = score.playerName;
-                let valEle = document.createElement("span");
-                valEle.textContent = score.score;
-                valEle.classList.add("value");
+                nameEle.textContent = playerName;
+                namesEle.appendChild(nameEle);
 
                 let scoreEle = document.createElement("div");
                 scoreEle.classList.add("score");
-                scoreEle.appendChild(nameEle);
-                scoreEle.appendChild(valEle);
-                document.getElementById("scores").appendChild(scoreEle);
+                scoreEle.textContent = score;
+                scoresEle.appendChild(scoreEle);
+
+                scoreEle.style.width = ((score / maxScore) * 100) + "%";
             }
+
+            document.getElementById("resultstable").appendChild(namesEle);
+            document.getElementById("resultstable").appendChild(scoresEle);
+
             document.getElementById("results").style.display = "";
         }
 
@@ -181,8 +201,14 @@
                 getAnswer(correctAnswer).classList.add("active");
 
                 markNonCorrectAnswersAsTosh(correctAnswer);
+                await sleep(3000);
 
-                await sleep(5000);
+                if (message.questionIdx < message.totalQuestions - 1) {
+                    displayResults(message);
+                    await sleep(3000);
+                    document.getElementById("results").style.display = "none";
+                }
+
 
                 socket.send(JSON.stringify({
                     type: "displayanswerfinished",
@@ -278,13 +304,13 @@
     Enter your tosh now!
 </div>
 
-<div id="answers"></div>
-<div class="results" id="results" style="display: none;">
-    <h1>Results</h1>
-    <div class="scores" id="scores">
+<div id="answers">
+</div>
 
+<div class="results" id="results" style="display: none;">
+    <h1 id="resultintro">How you doing?</h1>
+    <div class="resultstable" id="resultstable">
     </div>
-    <a href="/">Back to home</a>
 </div>
 </body>
 </html>

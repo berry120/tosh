@@ -10,7 +10,6 @@ import com.github.berry120.wikiquiz.model.client.ClientPlayerJoined;
 import com.github.berry120.wikiquiz.model.client.ClientPlayerRemoved;
 import com.github.berry120.wikiquiz.model.client.ClientQuestion;
 import com.github.berry120.wikiquiz.model.client.ClientResult;
-import com.github.berry120.wikiquiz.model.client.ClientScore;
 import com.github.berry120.wikiquiz.model.client.PlayerDetails;
 import com.github.berry120.wikiquiz.redis.RedisRepository;
 import com.github.berry120.wikiquiz.socket.DisplaySocket;
@@ -168,6 +167,7 @@ public class QuizRunnerService {
     private ClientAnswer getClientAnswer(QuizState quizState, Quiz quiz, QuizQuestion question) {
         return new ClientAnswer(
                 quizState.getQuestionNumber(),
+                quiz.getQuestions().size(),
                 question.getQuestion(),
                 question.getCorrectAnswer(),
                 getQuestionOptions(quiz, question),
@@ -180,10 +180,7 @@ public class QuizRunnerService {
     }
 
     private void sendFinalScoreStage(String quizId) {
-        ClientResult clientResult = new ClientResult(redisRepository.retrieveScores(quizId)
-                .entrySet().stream()
-                .map(e -> new ClientScore(e.getKey(), e.getValue()))
-                .collect(Collectors.toList()));
+        ClientResult clientResult = new ClientResult(redisRepository.retrieveScores(quizId));
 
         displaySocket.sendObject(quizId, clientResult);
         phoneSocket.sendObject(quizId, clientResult);

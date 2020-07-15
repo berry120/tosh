@@ -1,3 +1,34 @@
+.resultstable {
+    display: flex;
+}
+
+.names,
+.scores {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+}
+
+.name,
+.score {
+    margin-bottom: 5px;
+    text-align: left;
+    font-family: 'Roboto', sans-serif;
+    font-size: 1em;
+}
+
+.scores {
+    flex-basis: 100%;
+}
+
+.score {
+    width: 0;
+    padding-left: 5px;
+    color: white;
+    background-color: black;
+    transition: width 2s;
+}
+
 .meter {
     height: 30px;
     width: 100%;
@@ -105,14 +136,6 @@
 
 .results {
     font-family: 'Bangers', cursive;
-}
-
-.scores {
-    font-family: 'Bangers', cursive;
-    font-size: 2em;
-}
-
-.name {
-    font-family: 'Bangers', cursive;
-    margin-right: 2em;
+    width: calc(50% - 50px);
+    text-align: center;
 }

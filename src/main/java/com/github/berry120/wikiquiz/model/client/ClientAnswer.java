@@ -9,6 +9,7 @@ public class ClientAnswer implements ClientObject {
 
     private String type;
     private int questionIdx;
+    private int totalQuestions;
     private String question;
     private String correctAnswer;
     private List<String> choices;
@@ -16,9 +17,10 @@ public class ClientAnswer implements ClientObject {
     private Map<String, List<String>> fakeAnswers;
     private Map<String, Integer> scores;
 
-    public ClientAnswer(int questionIdx, String question, String correctAnswer, List<String> choices, Map<String, List<String>> answers, Map<String, List<String>> fakeAnswers, Map<String, Integer> scores) {
+    public ClientAnswer(int questionIdx, int totalQuestions, String question, String correctAnswer, List<String> choices, Map<String, List<String>> answers, Map<String, List<String>> fakeAnswers, Map<String, Integer> scores) {
         this.type = "answer";
         this.questionIdx = questionIdx;
+        this.totalQuestions = totalQuestions;
         this.question = question;
         this.correctAnswer = correctAnswer;
         this.choices = choices;
