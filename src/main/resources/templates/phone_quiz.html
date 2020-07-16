@@ -12,12 +12,14 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>WikiQuiz</title>
+    <script src="http://www.myersdaily.org/joseph/javascript/md5.js"></script>
     <link href="/css/style.css" rel="stylesheet" type="text/css">
     <link href="/css/phonequiz.css" rel="stylesheet" type="text/css">
     <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/style.css">-->
     <!--    <link rel="stylesheet" type="text/css" href="../META-INF/resources/phonequiz.css">-->
     <script>
         window.socket = new WebSocket("ws://" + location.host + "/socket/phone/{quizid}/{personid}");
+        let currentAnswerHash;
 
         socket.onopen = function () {
             console.log("Connected to the web socket");
@@ -33,6 +35,7 @@
                 document.getElementById("fakesubmissionquestion").textContent = message.question;
                 document.getElementById("fakesubmission").style.display = "";
                 document.getElementById("fakesubmissionbutton").disabled = false;
+                currentAnswerHash = message.answerHash;
             } else if (message.type === "question") {
                 document.getElementById("fakesubmission").style.display = "none";
                 document.getElementById("answerquestion").style.display = "";
@@ -67,13 +70,18 @@
         }
 
         function submitFakeAnswer() {
-            window.socket.send(JSON.stringify({
-                type: "fakeanswer",
-                answer: document.getElementById("fakesubmissionanswer").value
-            }));
-            document.getElementById("fakesubmissionbutton").disabled = true;
-            document.getElementById("introText").style.display = "";
-            document.getElementById("fakesubmission").style.display = "none";
+            let answer = document.getElementById("fakesubmissionanswer").value;
+            if (md5(answer.toLowerCase()) === currentAnswerHash) {
+                alert("Hey, choose a fib - not the truth!");
+            } else {
+                window.socket.send(JSON.stringify({
+                    type: "fakeanswer",
+                    answer: answer
+                }));
+                document.getElementById("fakesubmissionbutton").disabled = true;
+                document.getElementById("introText").style.display = "";
+                document.getElementById("fakesubmission").style.display = "none";
+            }
         }
 
         function checkLength() {

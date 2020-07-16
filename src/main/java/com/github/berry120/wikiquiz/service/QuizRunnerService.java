@@ -31,14 +31,16 @@ public class QuizRunnerService {
     private final RootSocket rootSocket;
     private final RedisRepository redisRepository;
     private final AnswerTransformerService answerTransformer;
+    private final Crypto crypto;
 
     @Inject
-    QuizRunnerService(RedisRepository redisRepository, DisplaySocket displaySocket, PhoneSocket phoneSocket, RootSocket rootSocket, AnswerTransformerService answerTransformer) {
+    QuizRunnerService(RedisRepository redisRepository, DisplaySocket displaySocket, PhoneSocket phoneSocket, RootSocket rootSocket, AnswerTransformerService answerTransformer, Crypto crypto) {
         this.redisRepository = redisRepository;
         this.displaySocket = displaySocket;
         this.phoneSocket = phoneSocket;
         this.rootSocket = rootSocket;
         this.answerTransformer = answerTransformer;
+        this.crypto = crypto;
     }
 
     public void startQuiz(String quizId) {
@@ -85,7 +87,7 @@ public class QuizRunnerService {
             QuizQuestion question = quiz.getQuestions().get(quizState.getQuestionNumber());
 
             if (quizState.getQuestionStage() == QuestionStage.FAKE_ANSWER_SUBMISSION) {
-                ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(question.getQuestion(), quizState.getQuestionNumber());
+                ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(question.getQuestion(), crypto.getCaseInsensitiveMd5(question.getCorrectAnswer()), quizState.getQuestionNumber());
                 phoneSocket.sendObject(quizId, playerDetails, clientFakeAnswerRequest);
             } else if (quizState.getQuestionStage() == QuestionStage.PICK_ANSWER) {
                 ClientQuestion clientQuestion = new ClientQuestion(question.getQuestion(), getQuestionOptions(quiz, question));
@@ -114,8 +116,8 @@ public class QuizRunnerService {
 
             redisRepository.removeTempQuestionData(quizId);
             Quiz quiz = redisRepository.retrieveQuiz(quizId);
-            String questionText = quiz.getQuestions().get(questionNumber).getQuestion();
-            ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(questionText, questionNumber);
+            QuizQuestion question = quiz.getQuestions().get(questionNumber);
+            ClientFakeAnswerRequest clientFakeAnswerRequest = new ClientFakeAnswerRequest(question.getQuestion(), crypto.getCaseInsensitiveMd5(question.getCorrectAnswer()), questionNumber);
 
             displaySocket.sendObject(quizId, clientFakeAnswerRequest);
             phoneSocket.sendObject(quizId, clientFakeAnswerRequest);

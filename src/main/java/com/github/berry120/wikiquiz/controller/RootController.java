@@ -39,6 +39,7 @@ public class RootController {
     @Produces(MediaType.TEXT_HTML)
     public Response root() {
         Quiz quiz = quizCreationService.createQuiz();
+        System.out.println(quiz.getQuestions());
         redisRepository.storeQuiz(quiz);
         return Response
                 .temporaryRedirect(URI.create("/" + quiz.getId()))
