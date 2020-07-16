@@ -1,3 +1,6 @@
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/00117ea56797449cae17dffd81cae47b)](https://www.codacy.com/manual/berry120/tosh?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=berry120/tosh&amp;utm_campaign=Badge_Grade)
+[![berry120](https://circleci.com/gh/berry120/tosh.svg?style=svg)](https://app.circleci.com/pipelines/github/berry120/tosh)
+
 # Tosh
 Tosh is a game similar to Balderdash, Fibbage, Fictionary and others. Fool your opponents by providing wrong answers for them to guess!
 
